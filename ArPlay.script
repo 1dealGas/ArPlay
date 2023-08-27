@@ -258,7 +258,8 @@ local fmt_score_and_lost = "◇  %d · %d"
 --  Easing System
 --
 local easecalc = 0
-local function ease(ratio, typeid)
+local PartialEASE = PartialEase.EASE
+local function EASE(ratio, typeid)
 	--
 	-- InCirc
 	if typeid == 1 then easecalc = sqrt( 1 - ratio*ratio ); return ( 1 - easecalc )
@@ -477,7 +478,7 @@ local function ArCamera(nodes, progress, zindex)
 							local dv = znt[poll_progress+1].y - v0
 							local ratio = (progress-t0) / dt
 							if etype==0 then xscale = v0 + dv*ratio
-							else xscale = v0 + dv*ease(ratio, etype)
+							else xscale = v0 + dv*EASE(ratio, etype)
 							end
 							type_interpolated = true
 							znt[1] = poll_progress
@@ -505,7 +506,7 @@ local function ArCamera(nodes, progress, zindex)
 							local dv = znt[poll_progress+1].y - v0
 							local ratio = (progress-t0) / dt
 							if etype==0 then yscale = v0 + dv*ratio
-							else yscale = v0 + dv*ease(ratio, etype)
+							else yscale = v0 + dv*EASE(ratio, etype)
 							end
 							type_interpolated = true
 							znt[1] = poll_progress
@@ -533,7 +534,7 @@ local function ArCamera(nodes, progress, zindex)
 							local dv = znt[poll_progress+1].y - v0
 							local ratio = (progress-t0) / dt
 							if etype==0 then rotrad = v0 + dv*ratio
-							else rotrad = v0 + dv*ease(ratio, etype)
+							else rotrad = v0 + dv*EASE(ratio, etype)
 							end
 							type_interpolated = true
 							znt[1] = poll_progress
@@ -561,7 +562,7 @@ local function ArCamera(nodes, progress, zindex)
 							local dv = znt[poll_progress+1].y - v0
 							local ratio = (progress-t0) / dt
 							if etype==0 then xdelta = v0 + dv*ratio
-							else xdelta = v0 + dv*ease(ratio, etype)
+							else xdelta = v0 + dv*EASE(ratio, etype)
 							end
 							type_interpolated = true
 							znt[1] = poll_progress
@@ -589,7 +590,7 @@ local function ArCamera(nodes, progress, zindex)
 							local dv = znt[poll_progress+1].y - v0
 							local ratio = (progress-t0) / dt
 							if etype==0 then ydelta = v0 + dv*ratio
-							else ydelta = v0 + dv*ease(ratio, etype)
+							else ydelta = v0 + dv*EASE(ratio, etype)
 							end
 							type_interpolated = true
 							znt[1] = poll_progress
@@ -1081,6 +1082,10 @@ function update(self, tslf)
 											if current_type == 0 then
 												current_interpolated.x = current_x0 + current_dx*interpolate_ratio
 												current_interpolated.y = current_y0 + current_dy*interpolate_ratio
+											elseif current_type > 1048575 then
+												local irx,iry = PartialEASE(interpolate_ratio, current_type)
+												current_interpolated.x = current_x0 + current_dx*irx
+												current_interpolated.y = current_y0 + current_dy*iry
 											else
 												local typex = 0
 												local typey = 0
@@ -1088,8 +1093,8 @@ function update(self, tslf)
 												-- typey = floor( typey*10 + 0.5 )
 												typex = floor(current_type/10)
 												typey = current_type%10
-												current_interpolated.x = current_x0 + current_dx*ease(interpolate_ratio, typex)
-												current_interpolated.y = current_y0 + current_dy*ease(interpolate_ratio, typey)
+												current_interpolated.x = current_x0 + current_dx*EASE(interpolate_ratio, typex)
+												current_interpolated.y = current_y0 + current_dy*EASE(interpolate_ratio, typey)
 											end
 
 											-- Update: Set Z and Hint.
@@ -1208,6 +1213,10 @@ function update(self, tslf)
 									if current_type == 0 then
 										current_interpolated.x = current_x0 + current_dx*interpolate_ratio
 										current_interpolated.y = current_y0 + current_dy*interpolate_ratio
+									elseif current_type > 1048575 then
+										local irx,iry = PartialEASE(interpolate_ratio, current_type)
+										current_interpolated.x = current_x0 + current_dx*irx
+										current_interpolated.y = current_y0 + current_dy*iry
 									else
 										local typex = 0
 										local typey = 0
@@ -1215,8 +1224,8 @@ function update(self, tslf)
 										-- typey = floor( typey*10 + 0.5 )
 										typex = floor(current_type/10)
 										typey = current_type%10
-										current_interpolated.x = current_x0 + current_dx*ease(interpolate_ratio, typex)
-										current_interpolated.y = current_y0 + current_dy*ease(interpolate_ratio, typey)
+										current_interpolated.x = current_x0 + current_dx*EASE(interpolate_ratio, typex)
+										current_interpolated.y = current_y0 + current_dy*EASE(interpolate_ratio, typey)
 									end
 
 									-- Update: Set Z and Hint.
