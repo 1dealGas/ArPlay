@@ -330,7 +330,7 @@ static int EASE(lua_State* L)
 	bool Reversed = false;
 	if (ArIR > ArER)
 	{
-		ArIR ^= ArER;	ArIR ^= ArER;	ArIR ^= ArER;  // Swaps ArIR and ArER Bitwisely.
+		ArIR ^= ArER;	ArER ^= ArIR;	ArIR ^= ArER;  // Swaps ArIR and ArER Bitwisely.
 		Reversed = true;
 	}
 	RX = ArIR + (ArER - ArIR) * RX;
