@@ -1,0 +1,11 @@
+-- for directory "AcPartialEase", please refer to source links below.
+
+-> function "ArSqrtRev" is a modified implementation of the algorithm "Fast Inverse Square Root", under the Public Domain.
+https://zhuanlan.zhihu.com/p/571321688
+
+-> function "ArSin" and "ArCos" is a modification of QT's "qFastSin" and "qFastCos", under the LGPL License v2.1.
+-- To conform to the "Combined Library" definition, the modification of the source library is attached in this page.
+https://blog.csdn.net/maple_2014/article/details/115057482
+
+-> other functions is a modification of Defold Manual's example, under the Defold License.
+https://defold.com/manuals/extensions/
