@@ -1,13 +1,7 @@
--- for directory "AcPartialEase", please refer to source links above.
-https://zhuanlan.zhihu.com/p/571321688
-https://blog.csdn.net/maple_2014/article/details/115057482
-https://defold.com/manuals/extensions/
-
-
--- for Anim.script, ArInput.script, ArPlay.script
-
 MIT License
+
 Copyright (c) 2023 1dealGas
+-- for Anim.script, ArInput.script, ArPlay.script
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,3 +20,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+-- for directory "AcPartialEase", please refer to source links below.
+https://zhuanlan.zhihu.com/p/571321688
+https://blog.csdn.net/maple_2014/article/details/115057482
+https://defold.com/manuals/extensions/
