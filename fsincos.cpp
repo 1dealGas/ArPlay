@@ -7,6 +7,14 @@
 #define IPI 1.57079632679489661923
 #define DPI 6.28318530717958647692
 
+#if 2147483647L+1L == -2147483648L 
+typedef long i32;
+typedef unsigned long u32;
+#else
+typedef int i32;           /* In 64-bit systems, long may be 64-bit, */
+typedef unsigned int u32; /* here we force it to be 32-bit. */
+#endif
+
 // include the Defold SDK
 #include <dmsdk/sdk.h>
 
@@ -297,35 +305,38 @@ static inline double ArCos(double x)
 
 // fast_sin by Marc Pony(marc_pony@163.com)
 // Lua Version
-static int Sin(lua_State* L)
+static inline int Sin(lua_State* L)
 {
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_Number x = luaL_checknumber(L, 1);
+	lua_Number x = lua_tonumber(L, 1);
 	double d = x > 0.0 ? 0.5 : -0.5;
 	int si = (int)(x * SINE_TABLE_SIZE / DPI + d);
 	int ci = si + (SINE_TABLE_SIZE >> 2);
 	d = x - si * (DPI / SINE_TABLE_SIZE);
 	si &= (SINE_TABLE_SIZE1);
 	ci &= (SINE_TABLE_SIZE1);
+
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, sineTable[si] + (sineTable[ci] - 0.5 * sineTable[si] * d) * d );
 	return 1;
 }
 
 // fast_cos by Marc Pony(marc_pony@163.com)
 // Lua Version
-static int Cos(lua_State* L)
+static inline int Cos(lua_State* L)
 {
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_Number x = luaL_checknumber(L, 1);
+	lua_Number x = lua_tonumber(L, 1);
 	double d = x > 0.0 ? 0.5 : -0.5;
 	int ci = (int)(x * SINE_TABLE_SIZE / DPI + d);
 	int si = ci + (SINE_TABLE_SIZE >> 2);
 	d = x - ci * (DPI / SINE_TABLE_SIZE) ;
 	si &= (SINE_TABLE_SIZE1);
 	ci &= (SINE_TABLE_SIZE1);
+
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, sineTable[si] - (sineTable[ci] + 0.5 * sineTable[si] * d) * d );
 	return 1;
 }
+
 
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
@@ -335,43 +346,13 @@ static const luaL_reg Module_methods[] =
 	{0, 0}
 };
 
-static void LuaInit(lua_State* L)
+inline dmExtension::Result AcAppOK(dmExtension::AppParams* params) {return dmExtension::RESULT_OK;}
+inline dmExtension::Result AcOK(dmExtension::Params* params) {return dmExtension::RESULT_OK;}
+inline dmExtension::Result Initialize(dmExtension::Params* params)
 {
-	// Register lua names
-	// int top = lua_gettop(L);
-	luaL_register(L, MODULE_NAME, Module_methods);
-	lua_pop(L, 1);
-	// assert(top == lua_gettop(L));
-}
-
-dmExtension::Result AppInitializeMyExtension(dmExtension::AppParams* params)
-{
+	luaL_register(params->m_L, MODULE_NAME, Module_methods);
+	lua_pop(params->m_L, 1);
 	return dmExtension::RESULT_OK;
 }
 
-dmExtension::Result InitializeMyExtension(dmExtension::Params* params)
-{
-	// Init Lua
-	LuaInit(params->m_L);
-	// printf("Registered %s Extension\n", MODULE_NAME);
-	return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result AppFinalizeMyExtension(dmExtension::AppParams* params)
-{
-	return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result FinalizeMyExtension(dmExtension::Params* params)
-{
-	return dmExtension::RESULT_OK;
-}
-
-
-// Defold SDK uses a macro for setting up extension entry points:
-//
-// DM_DECLARE_EXTENSION(symbol, name, app_init, app_final, init, update, on_event, final)
-
-// MyExtension is the C++ symbol that holds all relevant extension data.
-// It must match the name field in the `ext.manifest`
-DM_DECLARE_EXTENSION(PartialEase, LIB_NAME, AppInitializeMyExtension, AppFinalizeMyExtension, InitializeMyExtension, 0, 0, FinalizeMyExtension)
+DM_DECLARE_EXTENSION(PartialEase, LIB_NAME, AcAppOK, AcAppOK, Initialize, 0, 0, AcOK)

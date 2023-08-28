@@ -1,5 +1,4 @@
--- Aerials/Pragma/ArPlay.script
-
+-- Aerials/Pragma/ArPlay
 go.property("fumen_id", 0)
 go.property("sound_speed", 1)
 go.property("display_losts", false)
@@ -256,33 +255,18 @@ local fmt_score_and_lost = "◇  %d · %d"
 
 --  Easing System
 --
-local easecalc = 0
-local EASE = PartialEase.EASE
-local PartialEASE = PartialEase.PEASE
-local sin = PartialEase.Sin
-local cos = PartialEase.Cos
-local sqrt = PartialEase.Sqrt
--- local function EASE(ratio, typeid)
--- 	--
--- 	-- InCirc
--- 	if typeid == 1 then easecalc = sqrt( 1 - ratio*ratio ); return ( 1 - easecalc )
--- 	--
--- 	-- OutCirc
--- 	elseif typeid == 2 then easecalc = 1 - ratio; return sqrt( 1 - easecalc*easecalc )
--- 	--
--- 	-- InQuad
--- 	elseif typeid == 3 then return ratio*ratio
--- 	--
--- 	-- OutQuad
--- 	elseif typeid == 4 then easecalc = 1 - ratio; return ( 1 - easecalc*easecalc )
--- 	--
--- 	-- InQuart
--- 	elseif typeid == 5 then easecalc = ratio*ratio; return ( easecalc*easecalc )
--- 	--
--- 	-- OutQuart
--- 	elseif typeid == 6 then easecalc = 1 - ratio; easecalc = easecalc*easecalc; return ( 1 - easecalc*easecalc )
--- 	else return ratio end
--- end
+local P = PartialEase
+local PHint = P._PHint
+local PWish = P._PWish
+local IpCam = P._IpCam
+local IpWish = P._IpWish
+local PHint_hasCam = P._PHint_hasCam
+local PWish_hasCam = P._PWish_hasCam
+local V3V4IsRepeated = P.V3V4IsRepeated
+local V3V4Apply = P.V3V4Apply
+local Ctint = P.Ctint
+local HAPos = P.HAPos
+
 --
 -- Input: Detection
 --
@@ -453,37 +437,20 @@ local function ArCamera(nodes, progress, zindex)
 	--
 	if progress then
 		
-		local xscale = 1
-		local yscale = 1
-		local rotrad = 0
-		local xdelta = 0
-		local ydelta = 0
-
-		local zf = floor(zindex)
-
+		local zf, xscale, yscale, rotrad, xdelta, ydelta = floor(zindex)
 		if nodes[zf] then
 			local zn = nodes[zf]
+			local znt,zntlen
 			
 			if (zn[1]) and #zn[1]>1 and progress>=zn[1][2].x then
-				local znt = zn[1]
-				local zntlen = #znt
-				if progress >= znt[zntlen].x then
-					xscale = znt[zntlen].y
+				znt = zn[1]
+				zntlen = #znt
+				if progress >= znt[zntlen].x then xscale = znt[zntlen].y
 				else
 					local poll_progress = znt[1]
-					local type_interpolated = false
-					while poll_progress ~= zntlen and not type_interpolated do
+					while poll_progress ~= zntlen and not xscale do
 						if znt[poll_progress].x <= progress and znt[poll_progress+1].x > progress then
-							local t0 = znt[poll_progress].x
-							local v0 = znt[poll_progress].y
-							local etype = znt[poll_progress].z
-							local dt = znt[poll_progress+1].x - t0
-							local dv = znt[poll_progress+1].y - v0
-							local ratio = (progress-t0) / dt
-							if etype==0 then xscale = v0 + dv*ratio
-							else xscale = v0 + dv*EASE(ratio, etype)
-							end
-							type_interpolated = true
+							xscale = IpCam(progress, znt[poll_progress], znt[poll_progress+1])
 							znt[1] = poll_progress
 						else
 							poll_progress = poll_progress + 1
@@ -493,25 +460,14 @@ local function ArCamera(nodes, progress, zindex)
 			end
 
 			if (zn[2]) and #zn[2]>1 and progress>=zn[2][2].x then
-				local znt = zn[2]
-				local zntlen = #znt
-				if progress >= znt[zntlen].x then
-					yscale = znt[zntlen].y
+				znt = zn[2]
+				zntlen = #znt
+				if progress >= znt[zntlen].x then yscale = znt[zntlen].y
 				else
 					local poll_progress = znt[1]
-					local type_interpolated = false
-					while poll_progress ~= zntlen and not type_interpolated do
+					while poll_progress ~= zntlen and not yscale do
 						if znt[poll_progress].x <= progress and znt[poll_progress+1].x > progress then
-							local t0 = znt[poll_progress].x
-							local v0 = znt[poll_progress].y
-							local etype = znt[poll_progress].z
-							local dt = znt[poll_progress+1].x - t0
-							local dv = znt[poll_progress+1].y - v0
-							local ratio = (progress-t0) / dt
-							if etype==0 then yscale = v0 + dv*ratio
-							else yscale = v0 + dv*EASE(ratio, etype)
-							end
-							type_interpolated = true
+							yscale = IpCam(progress, znt[poll_progress], znt[poll_progress+1])
 							znt[1] = poll_progress
 						else
 							poll_progress = poll_progress + 1
@@ -521,25 +477,14 @@ local function ArCamera(nodes, progress, zindex)
 			end
 
 			if (zn[3]) and #zn[3]>1 and progress>=zn[3][2].x then
-				local znt = zn[3]
-				local zntlen = #znt
-				if progress >= znt[zntlen].x then
-					rotrad = znt[zntlen].y
+				znt = zn[3]
+				zntlen = #znt
+				if progress >= znt[zntlen].x then rotrad = znt[zntlen].y
 				else
 					local poll_progress = znt[1]
-					local type_interpolated = false
-					while poll_progress ~= zntlen and not type_interpolated do
+					while poll_progress ~= zntlen and not rotrad do
 						if znt[poll_progress].x <= progress and znt[poll_progress+1].x > progress then
-							local t0 = znt[poll_progress].x
-							local v0 = znt[poll_progress].y
-							local etype = znt[poll_progress].z
-							local dt = znt[poll_progress+1].x - t0
-							local dv = znt[poll_progress+1].y - v0
-							local ratio = (progress-t0) / dt
-							if etype==0 then rotrad = v0 + dv*ratio
-							else rotrad = v0 + dv*EASE(ratio, etype)
-							end
-							type_interpolated = true
+							rotrad = IpCam(progress, znt[poll_progress], znt[poll_progress+1])
 							znt[1] = poll_progress
 						else
 							poll_progress = poll_progress + 1
@@ -549,25 +494,14 @@ local function ArCamera(nodes, progress, zindex)
 			end
 
 			if (zn[4]) and #zn[4]>1 and progress>=zn[4][2].x then
-				local znt = zn[4]
-				local zntlen = #znt
-				if progress >= znt[zntlen].x then
-					xdelta = znt[zntlen].y
+				znt = zn[4]
+				zntlen = #znt
+				if progress >= znt[zntlen].x then xdelta = znt[zntlen].y
 				else
 					local poll_progress = znt[1]
-					local type_interpolated = false
-					while poll_progress ~= zntlen and not type_interpolated do
+					while poll_progress ~= zntlen and not xdelta do
 						if znt[poll_progress].x <= progress and znt[poll_progress+1].x > progress then
-							local t0 = znt[poll_progress].x
-							local v0 = znt[poll_progress].y
-							local etype = znt[poll_progress].z
-							local dt = znt[poll_progress+1].x - t0
-							local dv = znt[poll_progress+1].y - v0
-							local ratio = (progress-t0) / dt
-							if etype==0 then xdelta = v0 + dv*ratio
-							else xdelta = v0 + dv*EASE(ratio, etype)
-							end
-							type_interpolated = true
+							xdelta = IpCam(progress, znt[poll_progress], znt[poll_progress+1])
 							znt[1] = poll_progress
 						else
 							poll_progress = poll_progress + 1
@@ -577,35 +511,24 @@ local function ArCamera(nodes, progress, zindex)
 			end
 
 			if (zn[5]) and #zn[5]>1 and progress>=zn[5][2].x then
-				local znt = zn[5]
-				local zntlen = #znt
-				if progress >= znt[zntlen].x then
-					ydelta = znt[zntlen].y
+				znt = zn[5]
+				zntlen = #znt
+				if progress >= znt[zntlen].x then ydelta = znt[zntlen].y
 				else
 					local poll_progress = znt[1]
-					local type_interpolated = false
-					while poll_progress ~= zntlen and not type_interpolated do
+					while poll_progress ~= zntlen and not ydelta do
 						if znt[poll_progress].x <= progress and znt[poll_progress+1].x > progress then
-							local t0 = znt[poll_progress].x
-							local v0 = znt[poll_progress].y
-							local etype = znt[poll_progress].z
-							local dt = znt[poll_progress+1].x - t0
-							local dv = znt[poll_progress+1].y - v0
-							local ratio = (progress-t0) / dt
-							if etype==0 then ydelta = v0 + dv*ratio
-							else ydelta = v0 + dv*EASE(ratio, etype)
-							end
-							type_interpolated = true
+							ydelta = IpCam(progress, znt[poll_progress], znt[poll_progress+1])
 							znt[1] = poll_progress
 						else
 							poll_progress = poll_progress + 1
 						end
 					end
 				end
-			end
+			end	
 			
 		end
-		return xscale,yscale,rotrad,xdelta,ydelta
+		return xscale or 1, yscale or 1, rotrad or 0, xdelta or 0, ydelta or 0
 		
 	else
 		for zi=1,16 do
@@ -730,38 +653,14 @@ function init(self)
 	local hints = self.Hint
 	if self.Camera then
 		local cam = self.Camera
+		local pos = false
 		for i=1, #hints do
-			-- Camera Configuration for Current Frame.
-			local pos = hints[i]
-			local posx = pos.x
-			local posy = pos.y
-			local xscale = 1
-			local yscale = 1
-			local rotrad = 0
-			local xdelta = 0
-			local ydelta = 0
-			xscale,yscale,rotrad,xdelta,ydelta = ArCamera(cam, pos.z, floor(pos.w))
-			-- Transformation.
-			if rotrad > -0.01 and rotrad < 0.01 then
-				posx = 8 + (posx - 8) * xscale + xdelta
-				posy = 4 + (posy - 4) * yscale + ydelta
-			else
-				local dx = (posx - 8) * xscale
-				local dy = (posy - 4) * yscale
-				posx = 8 + dx*cos(rotrad) - dy*sin(rotrad) + xdelta
-				posy = 4 + dx*sin(rotrad) + dy*cos(rotrad) + ydelta
-			end
-			pos.x = posx * 112.5
-			pos.y = posy * 112.5 + 90
-			pos.w = 0
+			pos = hints[i]
+			PHint_hasCam(pos, ArCamera(cam, pos.z, pos.w))
 		end
 		ArCamera(cam)
 	else
-		for i=1, #hints do
-			hints[i].x = hints[i].x * 112.5
-			hints[i].y = hints[i].y * 112.5 + 90
-			hints[i].w = 0
-		end
+		for i=1, #hints do PHint(hints[i]) end
 	end
 
 	-- Loads the Object Group, with Disable/Enable Messages.
@@ -1003,15 +902,13 @@ function update(self, tslf)
 		local spd = self.sound_speed
 		local progress = self.arloc*spd - Ar__audio_delay
 		-- local progress = ( Ar__time + tslf*1000 )*spd - Ar__audio_delay
-		if progress >= self.End then
-			del()
+		if progress >= self.End then del()
 		elseif progress >= self.Init then
 			
 			----------------  GAME LOGICS  ----------------
 
 			-- Sets the Current Index Group.
-			local current_index_group = 0
-			current_index_group = floor(progress/self.index_scale) + 1
+			local current_index_group = floor(progress/self.index_scale) + 1
 			if current_index_group < 1 then current_index_group = 1 end
 
 			-- Transfers a Vector Group.
@@ -1041,17 +938,9 @@ function update(self, tslf)
 							-- I.Interpolate the Positions, Append them after the Repetition Detection.
 							--
 							local group_id = 0  -- the Index of Current Wish Group.
-							local current_wish = 0
-							local current_x0 = 0
-							local current_y0 = 0
-							local current_t0 = 0
-							local current_dx = 0
-							local current_dy = 0
-							local current_dt = 0
-							local current_type = 0
-							local interpolate_ratio = 0
-
+							local current_wish = false
 							local current_indexes = self.Windex[dgroup]
+							
 							for i=1, #current_indexes do
 								group_id = current_indexes[i]
 								--
@@ -1059,6 +948,7 @@ function update(self, tslf)
 								-- A.Interpolate
 								--
 								current_wish = self.Wish[group_id]
+								current_interpolated.z = current_wish[2]
 								local current_wish_len = #current_wish
 								local wish_interpolated = false
 								if current_wish_len > 3 and current_wish[2] >= zi and current_wish[2] < zip1 then
@@ -1074,48 +964,7 @@ function update(self, tslf)
 
 									while poll_progress ~= current_wish_len and not wish_interpolated do
 										if current_wish[poll_progress].z <= dtime and current_wish[poll_progress+1].z > dtime then
-											current_x0 = current_wish[poll_progress].x
-											current_y0 = current_wish[poll_progress].y
-											current_t0 = current_wish[poll_progress].z
-											current_type = current_wish[poll_progress].w
-											current_dx = current_wish[poll_progress+1].x - current_x0
-											current_dy = current_wish[poll_progress+1].y - current_y0
-											current_dt = current_wish[poll_progress+1].z - current_t0
-											interpolate_ratio = (dtime-current_t0) / current_dt
-											if current_type == 0 then
-												current_interpolated.x = current_x0 + current_dx*interpolate_ratio
-												current_interpolated.y = current_y0 + current_dy*interpolate_ratio
-											elseif current_type > 1048575 then
-												local irx,iry = PartialEASE(interpolate_ratio, current_type)
-												current_interpolated.x = current_x0 + current_dx*irx
-												current_interpolated.y = current_y0 + current_dy*iry
-											else
-												local typex = 0
-												local typey = 0
-												-- typex,typey = intfrac(current_type)
-												-- typey = floor( typey*10 + 0.5 )
-												typex = floor(current_type/10)
-												typey = current_type%10
-												current_interpolated.x = current_x0 + current_dx*EASE(interpolate_ratio, typex)
-												current_interpolated.y = current_y0 + current_dy*EASE(interpolate_ratio, typey)
-											end
-
-											-- Update: Set Z and Hint.
-											--
-											current_interpolated.z = current_wish[2]
-											if poll_progress == 3 then
-												if interpolate_ratio <= 0.237 then
-													current_interpolated.w = 2 + interpolate_ratio
-												else
-													current_interpolated.w = 0
-												end
-											elseif poll_progress == current_wish_len-1 and interpolate_ratio >= 0.763 then
-												current_interpolated.w = -2 - interpolate_ratio
-											else
-												current_interpolated.w = 0
-											end
-
-											wish_interpolated = true
+											wish_interpolated = IpWish(dtime, poll_progress, current_wish_len, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
 											current_wish[1] = poll_progress
 										else
 											poll_progress = poll_progress + 1
@@ -1128,10 +977,7 @@ function update(self, tslf)
 									-- B.Appending for Initial Condition.
 									--
 									if ip_index == 1 then
-										vecs[1].x = current_interpolated.x
-										vecs[1].y = current_interpolated.y
-										vecs[1].z = current_interpolated.z
-										tints[1] = current_interpolated.w
+										tints[1] = V3V4Apply(vecs[1],current_interpolated)
 										ip_index = 2
 										-- 
 										-- C.Appending after Other Wishes.
@@ -1153,12 +999,10 @@ function update(self, tslf)
 										end
 
 										if not_repeated then
-											vecs[ip_index].x = current_interpolated.x
-											vecs[ip_index].y = current_interpolated.y
-											vecs[ip_index].z = current_interpolated.z
-											tints[ip_index] = current_interpolated.w
+											tints[ip_index] = V3V4Apply(vecs[ip_index],current_interpolated)
 											ip_index = ip_index + 1
 										end
+										
 									end
 								end
 							end
@@ -1173,16 +1017,8 @@ function update(self, tslf)
 					
 					local group_id = 0  -- the Index of Current Wish Group.
 					local current_wish = 0
-					local current_x0 = 0
-					local current_y0 = 0
-					local current_t0 = 0
-					local current_dx = 0
-					local current_dy = 0
-					local current_dt = 0
-					local current_type = 0
-					local interpolate_ratio = 0
-
 					local current_indexes = self.Windex[current_index_group]
+					
 					for i=1, #current_indexes do
 						group_id = current_indexes[i]
 						--
@@ -1190,6 +1026,7 @@ function update(self, tslf)
 						-- A.Interpolate
 						--
 						current_wish = self.Wish[group_id]
+						current_interpolated.z = current_wish[2]
 						local current_wish_len = #current_wish
 						local wish_interpolated = false
 						if current_wish_len > 3 then
@@ -1205,48 +1042,7 @@ function update(self, tslf)
 							
 							while poll_progress ~= current_wish_len and not wish_interpolated do
 								if current_wish[poll_progress].z <= progress and current_wish[poll_progress+1].z > progress then
-									current_x0 = current_wish[poll_progress].x
-									current_y0 = current_wish[poll_progress].y
-									current_t0 = current_wish[poll_progress].z
-									current_type = current_wish[poll_progress].w
-									current_dx = current_wish[poll_progress+1].x - current_x0
-									current_dy = current_wish[poll_progress+1].y - current_y0
-									current_dt = current_wish[poll_progress+1].z - current_t0
-									interpolate_ratio = (progress-current_t0) / current_dt
-									if current_type == 0 then
-										current_interpolated.x = current_x0 + current_dx*interpolate_ratio
-										current_interpolated.y = current_y0 + current_dy*interpolate_ratio
-									elseif current_type > 1048575 then
-										local irx,iry = PartialEASE(interpolate_ratio, current_type)
-										current_interpolated.x = current_x0 + current_dx*irx
-										current_interpolated.y = current_y0 + current_dy*iry
-									else
-										local typex = 0
-										local typey = 0
-										-- typex,typey = intfrac(current_type)
-										-- typey = floor( typey*10 + 0.5 )
-										typex = floor(current_type/10)
-										typey = current_type%10
-										current_interpolated.x = current_x0 + current_dx*EASE(interpolate_ratio, typex)
-										current_interpolated.y = current_y0 + current_dy*EASE(interpolate_ratio, typey)
-									end
-
-									-- Update: Set Z and Hint.
-									--
-									current_interpolated.z = current_wish[2]
-									if poll_progress == 3 then
-										if interpolate_ratio <= 0.237 then
-											current_interpolated.w = 2 + interpolate_ratio
-										else
-											current_interpolated.w = 0
-										end
-									elseif poll_progress == current_wish_len-1 and interpolate_ratio >= 0.763 then
-										current_interpolated.w = -2 - interpolate_ratio
-									else
-										current_interpolated.w = 0
-									end
-
-									wish_interpolated = true
+									wish_interpolated = IpWish(progress, poll_progress, current_wish_len, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
 									current_wish[1] = poll_progress
 								else
 									poll_progress = poll_progress + 1
@@ -1259,37 +1055,24 @@ function update(self, tslf)
 							-- B.Appending for Initial Condition.
 							--
 							if ip_index == 1 then
-								vecs[1].x = current_interpolated.x
-								vecs[1].y = current_interpolated.y
-								vecs[1].z = current_interpolated.z
-								tints[1] = current_interpolated.w
+								tints[1] = V3V4Apply(vecs[1],current_interpolated)
 								ip_index = 2
 								-- 
 								-- C.Appending after Other Wishes.
 								--
 							else
 								local not_repeated = true
-								local dz = 0
 								for i = ip_index-1, 1, -1 do
-									dz = floor(vecs[i].z) - floor(current_interpolated.z)
-									if dz==0 then
-										local dx = vecs[i].x - current_interpolated.x
-										local dy = vecs[i].y - current_interpolated.y
-										if dx<0.0001 and dy<0.0001 and dx>-0.0001 and dy>-0.0001 then
-											tints[i] = 0
-											not_repeated = false
-											break
-										end
+									if V3V4IsRepeated(vecs[i], current_interpolated) then
+										tints[i] = 0
+										not_repeated = false
+										break
 									end
 								end
-
 								if not_repeated then
-									vecs[ip_index].x = current_interpolated.x
-									vecs[ip_index].y = current_interpolated.y
-									vecs[ip_index].z = current_interpolated.z
-									tints[ip_index] = current_interpolated.w
+									tints[ip_index] = V3V4Apply(vecs[ip_index],current_interpolated)
 									ip_index = ip_index + 1
-								end	
+								end
 							end
 						end
 					end
@@ -1301,61 +1084,22 @@ function update(self, tslf)
 			local cam = self.Camera
 			for i=1, ip_index-1 do
 
-				local pos = vecs[i]
-				local ctint = tints[i]
-
-				if cam then
-					-- Camera Configuration for Current Frame.
-					local xscale = 1
-					local yscale = 1
-					local rotrad = 0
-					local xdelta = 0
-					local ydelta = 0
-					xscale,yscale,rotrad,xdelta,ydelta = ArCamera(cam, progress, pos.z)
-					-- Transformation.
-					if rotrad > -0.01 and rotrad < 0.01 then
-						pos.x = 8 + (pos.x - 8) * xscale + xdelta
-						pos.y = 4 + (pos.y - 4) * yscale + ydelta
-					else
-						local dx = (pos.x - 8) * xscale
-						local dy = (pos.y - 4) * yscale
-						pos.x = 8 + dx*cos(rotrad) - dy*sin(rotrad) + xdelta
-						pos.y = 4 + dx*sin(rotrad) + dy*cos(rotrad) + ydelta
-					end
+				local pos, ctint, x_, y_ = vecs[i], tints[i]
+				if cam then x_, y_ = PWish_hasCam( pos, ArCamera(cam, progress, pos.z) )
+				else x_, y_ = PWish( pos )
 				end
-				pos.x = pos.x * 112.5
-				pos.y = pos.y * 112.5 + 90
-				if pos.x >= 66 and pos.x <= 1734 and pos.y >= 66 and pos.y <= 1014 then
-
-					_,pos.z = intfrac(pos.z)
-					local currenthash_wish = wgo[culled_index]
-
+				
+				if x_ >= 66 and x_ <= 1734 and y_ >= 66 and y_ <= 1014 then
 					--
 					-- Update: Simple Tint&Scale Effect for Wishes.
-					-- InQuart: easecalc = ratio*ratio; return ( easecalc*easecalc )
-					-- OutQuart: easecalc = 1 - ratio; easecalc = easecalc*easecalc; return ( 1 - easecalc*easecalc )
 					--
-					local tintw = 1
-					local expand_wish = 1
-					if ctint >=2 then
-						tintw = ctint - 2
-						tintw = 1 - tintw / 0.237
-						expand_wish = 1 + tintw*tintw/2
-						tintw = 1 - tintw*tintw*tintw
-					elseif ctint <=-2 then
-						tintw = 3 + ctint
-						tintw = tintw / 0.237
-						tintw = tintw*tintw*tintw
-					end
+					local currenthash_wish = wgo[culled_index]
+					local tintw, expand_wish = Ctint(ctint)
 					set(currenthash_wish, hash_tintw, tintw)
 					scale(expand_wish, currenthash_wish)
-					--
-					--
-
 					set_position(pos, currenthash_wish)
 					if culled_index>last_culled then send(currenthash_wish, hash_enable) end
 					culled_index = culled_index + 1
-
 				end
 			end
 			--
@@ -1375,6 +1119,7 @@ function update(self, tslf)
 			local target = false
 			local chid = false
 			local chint = false
+			local chintw = 0
 			local dt = 0
 			local pt = 0
 			--
@@ -1402,34 +1147,28 @@ function update(self, tslf)
 						end
 						--
 						local thisgo = false
+						chintw = chint.w
 						if dt<370 and dt>=-370 then
-							--
-							vecs[i].x = chint.x
-							vecs[i].y = chint.y
-							--
-							if chint.w==0 then
-								vecs[i].z = -0.74
+							if chintw==0 then
 								thisgo = hgo[hgo_index]
-								set_position(vecs[i], thisgo)
+								set_position( HAPos(vecs[i], chint, -0.74), thisgo)
 								set(thisgo, hash_tint, DELIT)
 								if hgo_index>last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
-							elseif chint.w==-1 then
-								vecs[i].z = -0.73
+							elseif chintw==-1 then
 								thisgo = hgo[hgo_index]
-								set_position(vecs[i], thisgo)
+								set_position( HAPos(vecs[i], chint, -0.73), thisgo)
 								set(thisgo, hash_tint, NJLIT)
 								if hgo_index>last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
-							elseif chint.w<-1 then
-								vecs[i].z = -0.71
+							elseif chintw<-1 then
 								thisgo = hgo[hgo_index]
-								set_position(vecs[i], thisgo)
+								set_position( HAPos(vecs[i], chint, -0.71), thisgo)
 								if hgo_index>last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
 
 								-- Show Early/Late on Hint.
-								dt = ( -chint.w - chint.z )/spd
+								dt = ( -chintw - chint.z )/spd
 								if dt<HITZONE and dt>-HITZONE then
 									set(thisgo, hash_tint, HIT)
 								elseif dt>=HITZONE then
@@ -1437,43 +1176,30 @@ function update(self, tslf)
 								else
 									set(thisgo, hash_tint, EAR)
 								end
-
-							elseif chint.w==1 then
-								vecs[i].z = -0.72+dt*0.00001
+							elseif chintw==1 then
 								thisgo = hgo[hgo_index]
-								set_position(vecs[i], thisgo)
+								set_position( HAPos(vecs[i], chint, -0.72+dt*0.00001), thisgo)
 								set(thisgo, hash_tint, hintlost(dt) )
-								if hgo_index>last_hgo then send(thisgo, hash_enable) end
+								if hgo_index > last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
-							elseif chint.w>1 and ago then
-								pt = (progress-chint.w) / spd
-								vecs[i].z = -0.7 - pt*0.00001
+							elseif chintw>1 and ago then
+								pt = (progress-chintw) / spd
 								thisgo = ago[ago_index]
-								set_position(vecs[i], thisgo)
+								set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)
 								send(thisgo, hash_ar_update, { pt, (chint.w-chint.z)/spd } )
 								ago_index = ago_index + 1
 							end
-						elseif dt<510 and chint.w>1 and ago then
-							
-							pt = (progress-chint.w) / spd
-
-							vecs[i].x = chint.x
-							vecs[i].y = chint.y
-							vecs[i].z = -0.7 - pt*0.00001
-
+						elseif dt<510 and chintw>1 and ago then						
+							pt = (progress-chintw) / spd
 							thisgo = ago[ago_index]
-							set_position(vecs[i], thisgo)
+							set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)
 							send(thisgo, hash_ar_update, { (progress-chint.w)/spd, (chint.w-chint.z)/spd } )
 							ago_index = ago_index + 1
 						elseif dt>=-510 and dt<-370 then
-							vecs[i].x = chint.x
-							vecs[i].y = chint.y
-							vecs[i].z = -0.75 - dt*0.00001
-
 							thisgo = hgo[hgo_index]
-							set_position(vecs[i], thisgo)
+							set_position( HAPos(vecs[i], chint, -0.75-dt*0.00001), thisgo)
 							set(thisgo, hash_tint, hintinit(dt) )
-							if hgo_index>last_hgo then send(thisgo, hash_enable) end
+							if hgo_index > last_hgo then send(thisgo, hash_enable) end
 							hgo_index = hgo_index + 1
 						end
 					end
@@ -1558,7 +1284,7 @@ function update(self, tslf)
 					end
 				end
 
-				if frame_limit_gc < 4 then
+				if frame_limit_gc < 6 then
 					frame_limit_gc = frame_limit_gc + 1
 				else
 					frame_limit_gc = 0

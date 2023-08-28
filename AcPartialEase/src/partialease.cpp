@@ -17,6 +17,10 @@ typedef unsigned int u32; /* here we force it to be 32-bit. */
 
 // include the Defold SDK
 #include <dmsdk/sdk.h>
+#include <dmsdk/dlib/vmath.h>
+#include <dmsdk/script/script.h>
+typedef dmVMath::Vector3* v3p;
+typedef dmVMath::Vector4* v4p;
 
 static const double sineTable[SINE_TABLE_SIZE] = {
 	0.0,
@@ -314,58 +318,58 @@ static inline float ArSqrtRev(float number)
 
 // fast_sin by Marc Pony(marc_pony@163.com)
 // Lua Version
-static int Sin(lua_State* L)
+static inline int Sin(lua_State* L)
 {
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_Number x = luaL_checknumber(L, 1);
+	lua_Number x = lua_tonumber(L, 1);
 	double d = x > 0.0 ? 0.5 : -0.5;
 	int si = (int)(x * SINE_TABLE_SIZE / DPI + d);
 	int ci = si + (SINE_TABLE_SIZE >> 2);
 	d = x - si * (DPI / SINE_TABLE_SIZE);
 	si &= (SINE_TABLE_SIZE1);
 	ci &= (SINE_TABLE_SIZE1);
+
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, sineTable[si] + (sineTable[ci] - 0.5 * sineTable[si] * d) * d );
 	return 1;
 }
 
 // fast_cos by Marc Pony(marc_pony@163.com)
 // Lua Version
-static int Cos(lua_State* L)
+static inline int Cos(lua_State* L)
 {
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_Number x = luaL_checknumber(L, 1);
+	lua_Number x = lua_tonumber(L, 1);
 	double d = x > 0.0 ? 0.5 : -0.5;
 	int ci = (int)(x * SINE_TABLE_SIZE / DPI + d);
 	int si = ci + (SINE_TABLE_SIZE >> 2);
 	d = x - ci * (DPI / SINE_TABLE_SIZE) ;
 	si &= (SINE_TABLE_SIZE1);
 	ci &= (SINE_TABLE_SIZE1);
+
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, sineTable[si] - (sineTable[ci] + 0.5 * sineTable[si] * d) * d );
 	return 1;
 }
 
 // Carmack Square Root
 // Lua Version
-static int Sqrt(lua_State* L)
+static inline int Sqrt(lua_State* L)
 {
-	DM_LUA_STACK_CHECK(L, 1);
-	float number = luaL_checknumber(L, 1);
+	float number = lua_tonumber(L, 1);
 	union {float f;	u32 i;} conv = { .f = number };
 	conv.i  = 0x5f375a86 - (conv.i >> 1);
 	conv.f *= 1.5F - (number * 0.5F * conv.f * conv.f);
+
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, 1.0f / conv.f );
 	return 1;
 }
 
 
-static int EASE(lua_State* L)
+static inline int EASE(lua_State* L)
 {
-	// Engine Stack Check
-	DM_LUA_STACK_CHECK(L, 2);
-
 	// Gets Parameters
-	lua_Number ratio = luaL_checknumber(L, 1);
-	int type = (int)luaL_checknumber(L, 2);
+	lua_Number ratio = lua_tonumber(L, 1);
+	int type = (int)lua_tonumber(L, 2);
 
 	switch(type)
 	{
@@ -391,31 +395,29 @@ static int EASE(lua_State* L)
 		case 6:
 		ratio = 1.0 - ratio;
 		ratio *= ratio;
-		ratio = 1 - ratio*ratio;
+		ratio = 1.0 - ratio*ratio;
 		break;
 	}
 
 	// Return
+	DM_LUA_STACK_CHECK(L, 1);
 	lua_pushnumber(L, ratio);
 	return 1;
 }
 
-static int PEASE(lua_State* L)
+static inline int PEASE(lua_State* L)
 {
-	// Engine Stack Check
-	DM_LUA_STACK_CHECK(L, 3);
-
 	// Gets Parameters
-	lua_Number RX = luaL_checknumber(L, 1);
-	int ArType = (int)luaL_checknumber(L, 2);
+	lua_Number RX = lua_tonumber(L, 1);
+	int ArType = (int)lua_tonumber(L, 2);
 
 	// Decode the ArType
 	int ArER = ArType & 0x3ff;	ArType >>= 10;
 	int ArIR = ArType & 0x3ff;	ArType >>= 10;
-	if (RX < 0) { RX = 0; }	else if (RX > 1) { RX = 1; }
-	if (ArIR < 0) { ArIR = 0; }	else if (ArIR > 1000) { ArIR = 1000; }
-	if (ArER < 0) { ArER = 0; }	else if (ArER > 1000) { ArER = 1000; }
-	if (ArType < 1) { ArType = 1; }	else if (ArType > 7) { ArType = 7; }
+	//if (RX < 0) { RX = 0; }	else if (RX > 1) { RX = 1; }
+	//if (ArIR < 0) { ArIR = 0; }	else if (ArIR > 1000) { ArIR = 1000; }
+	//if (ArER < 0) { ArER = 0; }	else if (ArER > 1000) { ArER = 1000; }
+	//if (ArType < 1) { ArType = 1; }	else if (ArType > 7) { ArType = 7; }
 
 	// Check for Reversed Status
 	bool Reversed = false;
@@ -471,11 +473,420 @@ static int PEASE(lua_State* L)
 	}
 	
 	// Return
+	DM_LUA_STACK_CHECK(L, 3);
 	lua_pushnumber(L, RX);
 	lua_pushnumber(L, RY);
 	lua_pushboolean(L, Reversed);
 	return 3;
 }
+
+static inline int _PHint(lua_State* L)
+{
+	v4p Hint = dmScript::ToVector4(L, 1);
+	Hint->setX( Hint->getX()*112.5f );
+	Hint->setY( Hint->getY()*112.5f + 90.0f);
+	Hint->setW( 0.0f );
+	return 0;
+}
+
+static inline int _PWish(lua_State* L)
+{
+	v3p Hint = dmScript::ToVector3(L, 1);
+	float x = Hint->getX()*112.5f;
+	float y = Hint->getY()*112.5f + 90.0f;
+	float z = Hint->getZ();
+	z = z - int(z);
+	
+	Hint->setX(x);
+	Hint->setY(y);
+	Hint->setZ(z);
+
+	DM_LUA_STACK_CHECK(L, 2);
+	lua_pushnumber( L, lua_Number(x) );
+	lua_pushnumber( L, lua_Number(y) );
+	
+	return 2;
+}
+
+static inline int _PHint_hasCam(lua_State* L)
+{
+	v4p Hint = dmScript::ToVector4(L, 1);
+	lua_Number rotrad = lua_tonumber(L, 4);
+	lua_Number posx = Hint->getX();
+	lua_Number posy = Hint->getY();
+	//lua_Number xscale = lua_tonumber(L, 2);
+	//lua_Number yscale = lua_tonumber(L, 3);
+	//lua_Number xdelta = lua_tonumber(L, 5);
+	//lua_Number ydelta = lua_tonumber(L, 6);
+	if ( rotrad>-0.01 && rotrad<0.01 )
+	{
+		posx = 8.0 + (posx - 8.0) * lua_tonumber(L, 2) + lua_tonumber(L, 5);
+		posy = 4.0 + (posy - 4.0) * lua_tonumber(L, 3) + lua_tonumber(L, 6);
+	}
+	else
+	{
+		lua_Number s = rotrad>0.0 ? ArSin(rotrad) : -ArSin(-rotrad);
+		lua_Number c = rotrad>0.0 ? ArCos(rotrad) : ArCos(-rotrad);
+		lua_Number dx = (posx - 8.0) * lua_tonumber(L, 2);
+		lua_Number dy = (posy - 4.0) * lua_tonumber(L, 3);
+		posx = 8.0 + dx*c - dy*s + lua_tonumber(L, 5);
+		posy = 4.0 + dx*s + dy*c + lua_tonumber(L, 6);
+	}
+	Hint->setX( float(posx)*112.5f );
+	Hint->setY( float(posy)*112.5f + 90.0f);
+	Hint->setW( 0.0f );
+	return 0;
+}
+
+static inline int _PWish_hasCam(lua_State* L)
+{
+	v3p Hint = dmScript::ToVector3(L, 1);
+	lua_Number rotrad = lua_tonumber(L, 4);
+	lua_Number posx = Hint->getX();
+	lua_Number posy = Hint->getY();
+	//lua_Number xscale = lua_tonumber(L, 2);
+	//lua_Number yscale = lua_tonumber(L, 3);
+	//lua_Number xdelta = lua_tonumber(L, 5);
+	//lua_Number ydelta = lua_tonumber(L, 6);
+	if ( rotrad>-0.01 && rotrad<0.01 )
+	{
+		posx = 8.0 + (posx - 8.0) * lua_tonumber(L, 2) + lua_tonumber(L, 5);
+		posy = 4.0 + (posy - 4.0) * lua_tonumber(L, 3) + lua_tonumber(L, 6);
+	}
+	else
+	{
+		lua_Number s = rotrad>0.0 ? ArSin(rotrad) : -ArSin(-rotrad);
+		lua_Number c = rotrad>0.0 ? ArCos(rotrad) : ArCos(-rotrad);
+		lua_Number dx = (posx - 8.0) * lua_tonumber(L, 2);
+		lua_Number dy = (posy - 4.0) * lua_tonumber(L, 3);
+		posx = 8.0 + dx*c - dy*s + lua_tonumber(L, 5);
+		posy = 4.0 + dx*s + dy*c + lua_tonumber(L, 6);
+	}
+
+	float x = float(posx)*112.5f;
+	float y = float(posy)*112.5f + 90.0f;
+	float z = Hint->getZ();
+	z = z - int(z);
+	
+	Hint->setX(x);
+	Hint->setY(y);
+	Hint->setZ(z);
+
+	DM_LUA_STACK_CHECK(L, 2);
+	lua_pushnumber( L, lua_Number(x) );
+	lua_pushnumber( L, lua_Number(y) );
+	
+	return 2;
+}
+
+static inline int _IpWish(lua_State* L)
+{
+	float progress = lua_tonumber(L, 1);
+	int poll_progress = int( lua_tonumber(L, 2) );
+	int current_wish_len = int( lua_tonumber(L, 3) );
+	v4p before = dmScript::ToVector4(L, 4);
+	v4p after = dmScript::ToVector4(L, 5);
+	v4p to = dmScript::ToVector4(L, 6);
+
+	float current_x0 = before->getX();
+	float current_y0 = before->getY();
+	float current_dx = after->getX() - current_x0;
+	float current_dy = after->getY() - current_y0;
+
+	float current_t0 = before->getZ();
+	int current_type = int( before->getW() );
+	float ratiox = (progress - current_t0) / (after->getZ() - current_t0);
+
+	if (poll_progress == 3)
+	{
+		if (ratiox <= 0.237f)
+		{
+			to->setW( 2.0f + ratiox );
+		}
+		else
+		{
+			to->setW( 0.0f );
+		}
+	}
+	else if (poll_progress == current_wish_len - 1  &&  ratiox >= 0.763f)
+	{
+		to->setW( -2.0f - ratiox );
+	}
+	else
+	{
+		to->setW( 0.0f );
+	}
+	
+	if (current_type > 1048575)
+	{
+		// Gets Parameters: ratiox, ratioy, current_type
+		// Decode the Type
+		int ArER = current_type & 0x3ff;	current_type >>= 10;
+		int ArIR = current_type & 0x3ff;	current_type >>= 10;
+
+		// Check for Reversed Status
+		bool Reversed = false;
+		if (ArIR > ArER)
+		{
+			ArIR ^= ArER;	ArER ^= ArIR;	ArIR ^= ArER;  // Swaps ArIR and ArER Bitwisely.
+			Reversed = true;
+		}
+		ratiox = ( ArIR + (ArER - ArIR) * ratiox ) / 1000.0;
+		float ratioy = ratiox;
+
+		// Caculation
+		if (Reversed)
+		{
+			switch (current_type)
+			{
+				case 1: // xOutQuad
+				ratiox = 1 - ratiox;	ratiox = 1 - ratiox * ratiox;	break;
+				case 2: // xOutCirc
+				ratiox = 1 - ratiox;	ratiox = 1.0 / ArSqrtRev( 1 - ratiox * ratiox );	break;
+				case 3: // xCosine
+				ratiox = ArCos( ratiox * IPI );	break;
+				case 4: // yOutQuad
+				ratioy = 1 - ratioy;	ratioy = 1 - ratioy * ratioy;	break;
+				case 5: // yOutCirc
+				ratioy = 1 - ratioy;	ratioy = 1.0 / ArSqrtRev( 1 - ratioy * ratioy );	break;
+				case 6: // yCosine
+				ratioy = ArCos( ratioy * IPI );	break;
+				case 7: // xyOutQuad
+				ratiox = 1 - ratiox;	ratiox = 1 - ratiox * ratiox;	ratioy = ratiox;	break;
+			}
+		}
+		else
+		{
+			switch (current_type)
+			{
+				case 1: // xInQuad
+				ratiox *= ratiox;	break;
+				case 2: // xInCirc
+				ratiox = 1 - ratiox*ratiox;	ratiox = 1 - 1.0 / ArSqrtRev(ratiox);	break;
+				case 3: // xSine
+				ratiox = ArSin( ratiox * IPI );	break;
+				case 4: // yInQuad
+				ratioy *= ratioy;	break;
+				case 5: // yInCirc
+				ratioy = 1 - ratioy*ratioy;	ratioy = 1 - 1.0 / ArSqrtRev(ratioy);	break;
+				case 6: // ySine
+				ratioy = ArSin( ratioy * IPI );	break;
+				case 7: // xyInQuad
+				ratiox *= ratiox;	ratioy = ratiox;	break;
+			}
+		}
+
+		// Setting Values
+		to->setX( current_x0 + current_dx * ratiox );
+		to->setY( current_y0 + current_dy * ratioy );
+	}
+	else if (current_type)
+	{
+		float ratioy = ratiox;
+		switch ( current_type/10 )
+		{
+			case 1:
+			ratiox = 1.0f / ArSqrtRev( 1.0f - ratiox*ratiox );
+			ratiox = 1.0f - ratiox;
+			break;
+
+			case 2:
+			ratiox = 1.0f - ratiox;
+			ratiox = 1.0f / ArSqrtRev( 1.0f - ratiox*ratiox );
+			break;
+
+			case 3:
+			ratiox *= ratiox;
+			break;
+
+			case 4:
+			ratiox = 1.0f - ratiox;
+			ratiox = 1.0f - ratiox * ratiox;
+			break;
+
+			case 5:
+			ratiox *= ratiox;
+			ratiox *= ratiox;
+			break;
+
+			case 6:
+			ratiox = 1.0f - ratiox;
+			ratiox *= ratiox;
+			ratiox = 1.0f - ratiox * ratiox;
+			break;
+		}
+		to->setX( current_x0 + current_dx * ratiox );
+		switch ( current_type%10 )
+		{
+			case 1:
+			ratioy = 1.0f / ArSqrtRev( 1.0f - ratioy*ratioy );
+			ratioy = 1.0f - ratioy;
+			break;
+
+			case 2:
+			ratioy = 1.0f - ratioy;
+			ratioy = 1.0f / ArSqrtRev( 1.0f - ratioy*ratioy );
+			break;
+
+			case 3:
+			ratioy *= ratioy;
+			break;
+
+			case 4:
+			ratioy = 1.0f - ratioy;
+			ratioy = 1.0f - ratioy * ratioy;
+			break;
+
+			case 5:
+			ratioy *= ratioy;
+			ratioy *= ratioy;
+			break;
+
+			case 6:
+			ratioy = 1.0f - ratioy;
+			ratioy *= ratioy;
+			ratioy = 1.0f - ratioy * ratioy;
+			break;
+		}
+		to->setY( current_y0 + current_dy * ratioy );
+	}
+	else
+	{
+		to->setX( current_x0 + current_dx * ratiox );
+		to->setY( current_y0 + current_dy * ratiox );
+	}
+
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_pushboolean(L, true);
+	return 1;
+}
+
+static inline int _IpCam(lua_State* L)
+{
+	float progress = float( lua_tonumber(L, 1) );
+	v3p before = dmScript::ToVector3(L, 2);
+	v3p after = dmScript::ToVector3(L, 3);
+
+	float t0 = before->getX();
+	float v0 = before->getY();
+	int type = int(before->getZ());
+	float dt = after->getX() - t0;
+	float dv = after->getY() - v0;
+	progress = (progress-t0) / dt;
+
+	switch(type)
+	{
+		case 1:
+		progress = 1.0f / ArSqrtRev( 1.0f - progress*progress );
+		progress = 1.0f - progress;
+		break;
+		
+		case 2:
+		progress = 1.0f - progress;
+		progress = 1.0f / ArSqrtRev( 1.0f - progress*progress );
+		break;
+		
+		case 3:
+		progress *= progress;
+		break;
+		
+		case 4:
+		progress = 1.0f - progress;
+		progress = 1.0f - progress * progress;
+		break;
+		
+		case 5:
+		progress *= progress;
+		progress *= progress;
+		break;
+		
+		case 6:
+		progress = 1.0f - progress;
+		progress *= progress;
+		progress = 1.0f - progress * progress;
+		break;
+	}
+	
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_pushnumber(L, lua_Number(v0+dv*progress) );
+	return 1;
+}
+
+static inline int V3V4Apply(lua_State* L)
+{
+	v3p a = dmScript::ToVector3(L, 1);
+	v4p b = dmScript::ToVector4(L, 2);
+
+	a->setX( b->getX() );
+	a->setY( b->getY() );
+	a->setZ( b->getZ() );
+	
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_pushnumber(L, lua_Number( b->getW() ) );
+	return 1;
+}
+
+static inline int V3V4IsRepeated(lua_State* L)
+{
+	v3p a = dmScript::ToVector3(L, 1);
+	v4p b = dmScript::ToVector4(L, 2);
+	
+	int dz = int( a->getZ() ) - int( b->getZ() );
+	bool r = false;
+
+	if ( !dz )
+	{
+		float dx = a->getX() - b->getX();
+		float dy = a->getY() - b->getY();
+		if (dx<0.0001f && dy<0.0001f && dx>-0.0001f && dy>-0.0001f) { r = true; }
+	}
+
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_pushboolean(L, r);
+	return 1;
+}
+
+static inline int Ctint(lua_State* L)
+{
+	lua_Number ctint = lua_tonumber(L, 1);
+	lua_Number tintw = 1.0;
+	lua_Number expand_wish = 1.0;
+	
+	if (ctint >= 2.0)
+	{
+		tintw = ctint - 2.0;
+		tintw = 1 - tintw / 0.237;
+		expand_wish = 1 + tintw * tintw / 2;
+		tintw = 1 - tintw * tintw * tintw;
+	}
+	else if (ctint <= -2.0)
+	{
+		tintw = ctint + 3.0;
+		tintw /= 0.237;
+		tintw = tintw * tintw * tintw;
+	}
+	
+	DM_LUA_STACK_CHECK(L, 2);
+	lua_pushnumber(L, tintw);
+	lua_pushnumber(L, expand_wish);
+	return 2;
+}
+
+static inline int HAPos(lua_State* L)
+{
+	v3p vecsi = dmScript::ToVector3(L, 1);
+	v4p chint = dmScript::ToVector4(L, 2);
+	float viz = float( lua_tonumber(L, 3) );
+
+	vecsi->setX( chint->getX() );
+	vecsi->setY( chint->getY() );
+	vecsi->setZ( viz );
+
+	DM_LUA_STACK_CHECK(L, 1);
+	dmScript::PushVector3(L, *vecsi);
+	return 1;
+}
+
 
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
@@ -485,46 +896,26 @@ static const luaL_reg Module_methods[] =
 	{"Sin", Sin},
 	{"Cos", Cos},
 	{"Sqrt", Sqrt},
+	{"_IpCam", _IpCam},
+	{"_IpWish", _IpWish},
+	{"_PHint", _PHint},
+	{"_PHint_hasCam", _PHint_hasCam},
+	{"_PWish", _PWish},
+	{"_PWish_hasCam", _PWish_hasCam},
+	{"V3V4Apply", V3V4Apply},
+	{"V3V4IsRepeated", V3V4IsRepeated},
+	{"Ctint", Ctint},
+	{"HAPos", HAPos},
 	{0, 0}
 };
 
-static void LuaInit(lua_State* L)
+inline dmExtension::Result AcAppOK(dmExtension::AppParams* params) {return dmExtension::RESULT_OK;}
+inline dmExtension::Result AcOK(dmExtension::Params* params) {return dmExtension::RESULT_OK;}
+inline dmExtension::Result Initialize(dmExtension::Params* params)
 {
-	// Register lua names
-	// int top = lua_gettop(L);
-	luaL_register(L, MODULE_NAME, Module_methods);
-	lua_pop(L, 1);
-	// assert(top == lua_gettop(L));
-}
-
-dmExtension::Result AppInitializeMyExtension(dmExtension::AppParams* params)
-{
+	luaL_register(params->m_L, MODULE_NAME, Module_methods);
+	lua_pop(params->m_L, 1);
 	return dmExtension::RESULT_OK;
 }
 
-dmExtension::Result InitializeMyExtension(dmExtension::Params* params)
-{
-	// Init Lua
-	LuaInit(params->m_L);
-	// printf("Registered %s Extension\n", MODULE_NAME);
-	return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result AppFinalizeMyExtension(dmExtension::AppParams* params)
-{
-	return dmExtension::RESULT_OK;
-}
-
-dmExtension::Result FinalizeMyExtension(dmExtension::Params* params)
-{
-	return dmExtension::RESULT_OK;
-}
-
-
-// Defold SDK uses a macro for setting up extension entry points:
-//
-// DM_DECLARE_EXTENSION(symbol, name, app_init, app_final, init, update, on_event, final)
-
-// MyExtension is the C++ symbol that holds all relevant extension data.
-// It must match the name field in the `ext.manifest`
-DM_DECLARE_EXTENSION(PartialEase, LIB_NAME, AppInitializeMyExtension, AppFinalizeMyExtension, InitializeMyExtension, 0, 0, FinalizeMyExtension)
+DM_DECLARE_EXTENSION(PartialEase, LIB_NAME, AcAppOK, AcAppOK, Initialize, 0, 0, AcOK)

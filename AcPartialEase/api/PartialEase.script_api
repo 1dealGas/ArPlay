@@ -69,3 +69,132 @@
     - name: sqrtx
       type: number
       desc: Calculation result of sqrt(x).
+  - name: _IpCam
+    type: function
+    desc: Do interpolation from specified Camera Nodes.
+    parameters:
+    - name: progress
+      type: number
+    - name: before
+      type: vector3
+    - name: after
+      type: vector3
+    returns:
+    - name: result
+      type: number
+  - name: _IpWish
+    type: function
+    desc: Do interpolation from specified Wish Nodes, and then Save the result to specified Vector4.
+    parameters:
+    - name: progress
+      type: number
+    - name: poll_progress
+      type: number
+    - name: current_wish_len
+      type: number
+    - name: before
+      type: vector4
+    - name: after
+      type: vector4
+    - name: to
+      type: vector4
+  - name: _PHint
+    type: function
+    desc: Pre-Calculate a Hint's Position.
+    parameters:
+    - name: hint
+      type: vector4
+  - name: _PHint_hasCam
+    type: function
+    desc: Pre-Calculate a Hint's Position with Camera arguments.
+    parameters:
+    - name: hint
+      type: vector4
+    - name: xscale
+      type: number
+    - name: yscale
+      type: number
+    - name: rotrad
+      type: number
+    - name: xdelta
+      type: number
+    - name: ydelta
+      type: number
+  - name: _PWish
+    type: function
+    desc: Pre-Calculate a Wish's Position.
+    parameters:
+    - name: hint
+      type: vector3
+    returns:
+    - name: posx
+      type: number
+    - name: posy
+      type: number
+  - name: _PWish_hasCam
+    type: function
+    desc: Pre-Calculate a Wish's Position with Camera arguments.
+    parameters:
+    - name: hint
+      type: vector3
+    - name: xscale
+      type: number
+    - name: yscale
+      type: number
+    - name: rotrad
+      type: number
+    - name: xdelta
+      type: number
+    - name: ydelta
+      type: number
+    returns:
+    - name: posx
+      type: number
+    - name: posy
+      type: number
+  - name: V3V4Apply
+    type: function
+    desc: Apply a Vector4 to Vector3, and pop up the W value of speciefied Vector4.
+    parameters:
+    - name: v3
+      type: vector3
+    - name: v4
+      type: vector4
+    returns:
+    - name: v4w
+      type: number
+  - name: V3V4IsRepeated
+    type: function
+    desc: Check if Vector3(a) and Vector4(b) is repeated.
+    parameters:
+    - name: a
+      type: vector3
+    - name: b
+      type: vector4
+    returns:
+    - name: repeated
+      type: boolean
+  - name: Ctint
+    type: function
+    desc: Gets a Wish's Tint.w and Scale.
+    parameters:
+    - name: ctint
+      type: number
+    returns:
+    - name: tintw
+      type: number
+    - name: expand_wish
+      type: number
+  - name: HAPos
+    type: function
+    desc: Sets a HintGo/AnimGo's Position depending on specified vecs[i], chint and vecs[i].z.
+    parameters:
+    - name: vecsi
+      type: vector3
+    - name: chint
+      type: vector4
+    - name: viz
+      type: number
+    returns:
+    - name: vecsi
+      type: vector3
