@@ -234,9 +234,6 @@ local set = go.set
 
 local intfrac = math.modf
 local floor = math.floor
-local sin = math.sin
-local cos = math.cos
-local sqrt = math.sqrt
 
 local hash_enable = hash("enable")
 local hash_disable = hash("disable")
@@ -258,28 +255,32 @@ local fmt_score_and_lost = "◇  %d · %d"
 --  Easing System
 --
 local easecalc = 0
-local PartialEASE = PartialEase.EASE
-local function EASE(ratio, typeid)
-	--
-	-- InCirc
-	if typeid == 1 then easecalc = sqrt( 1 - ratio*ratio ); return ( 1 - easecalc )
-	--
-	-- OutCirc
-	elseif typeid == 2 then easecalc = 1 - ratio; return sqrt( 1 - easecalc*easecalc )
-	--
-	-- InQuad
-	elseif typeid == 3 then return ratio*ratio
-	--
-	-- OutQuad
-	elseif typeid == 4 then easecalc = 1 - ratio; return ( 1 - easecalc*easecalc )
-	--
-	-- InQuart
-	elseif typeid == 5 then easecalc = ratio*ratio; return ( easecalc*easecalc )
-	--
-	-- OutQuart
-	elseif typeid == 6 then easecalc = 1 - ratio; easecalc = easecalc*easecalc; return ( 1 - easecalc*easecalc )
-	else return ratio end
-end
+local EASE = PartialEase.EASE
+local PartialEASE = PartialEase.PEASE
+local sin = PartialEase.Sin
+local cos = PartialEase.Cos
+local sqrt = PartialEase.Sqrt
+-- local function EASE(ratio, typeid)
+-- 	--
+-- 	-- InCirc
+-- 	if typeid == 1 then easecalc = sqrt( 1 - ratio*ratio ); return ( 1 - easecalc )
+-- 	--
+-- 	-- OutCirc
+-- 	elseif typeid == 2 then easecalc = 1 - ratio; return sqrt( 1 - easecalc*easecalc )
+-- 	--
+-- 	-- InQuad
+-- 	elseif typeid == 3 then return ratio*ratio
+-- 	--
+-- 	-- OutQuad
+-- 	elseif typeid == 4 then easecalc = 1 - ratio; return ( 1 - easecalc*easecalc )
+-- 	--
+-- 	-- InQuart
+-- 	elseif typeid == 5 then easecalc = ratio*ratio; return ( easecalc*easecalc )
+-- 	--
+-- 	-- OutQuart
+-- 	elseif typeid == 6 then easecalc = 1 - ratio; easecalc = easecalc*easecalc; return ( 1 - easecalc*easecalc )
+-- 	else return ratio end
+-- end
 --
 -- Input: Detection
 --

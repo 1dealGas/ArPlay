@@ -2,8 +2,10 @@
 #define MODULE_NAME "PartialEase"
 
 #define SINE_TABLE_SIZE 256
+#define SINE_TABLE_SIZE1 255
 #define PI 3.14159265358979323846
 #define IPI 1.57079632679489661923
+#define DPI 6.28318530717958647692
 
 #if 2147483647L+1L == -2147483648L 
 typedef long i32;
@@ -278,24 +280,26 @@ static const double sineTable[SINE_TABLE_SIZE] = {
 // fast_sin by Marc Pony(marc_pony@163.com)
 static inline double ArSin(double x)
 {
-	int sign = x > 0.0 ? 1 : -1;
-	int si = (int)(x * SINE_TABLE_SIZE / (2.0 * PI) + sign * 0.5);
-	double d = x - si * (2.0 * PI / SINE_TABLE_SIZE);
+	// int sign = x > 0.0 ? 1 : -1;
+	// int si = (int)(x * SINE_TABLE_SIZE / (2.0 * PI) + sign * 0.5);
+	int si = (int)(x * SINE_TABLE_SIZE / DPI + 0.5);
+	double d = x - si * (DPI / SINE_TABLE_SIZE);
 	int ci = si + (SINE_TABLE_SIZE >> 2);
-	si &= (SINE_TABLE_SIZE - 1);
-	ci &= (SINE_TABLE_SIZE - 1);
+	si &= (SINE_TABLE_SIZE1);
+	ci &= (SINE_TABLE_SIZE1);
 	return sineTable[si] + (sineTable[ci] - 0.5 * sineTable[si] * d) * d;
 }
 
 // fast_cos by Marc Pony(marc_pony@163.com)
 static inline double ArCos(double x)
 {
-	int sign = x > 0.0 ? 1 : -1;
-	int ci = (int)(x * SINE_TABLE_SIZE / (2.0 * PI) + sign * 0.5);
-	double d = x - ci * (2.0 * PI / SINE_TABLE_SIZE);
+	// int sign = x > 0.0 ? 1 : -1;
+	// int ci = (int)(x * SINE_TABLE_SIZE / (2.0 * PI) + sign * 0.5);
+	int ci = (int)(x * SINE_TABLE_SIZE / DPI + 0.5);
+	double d = x - ci * ( DPI / SINE_TABLE_SIZE);
 	int si = ci + (SINE_TABLE_SIZE >> 2);
-	si &= (SINE_TABLE_SIZE - 1);
-	ci &= (SINE_TABLE_SIZE - 1);
+	si &= (SINE_TABLE_SIZE1);
+	ci &= (SINE_TABLE_SIZE1);
 	return sineTable[si] - (sineTable[ci] + 0.5 * sineTable[si] * d) * d;
 }
 
@@ -308,8 +312,95 @@ static inline float ArSqrtRev(float number)
 	return conv.f;
 }
 
+// fast_sin by Marc Pony(marc_pony@163.com)
+// Lua Version
+static int Sin(lua_State* L)
+{
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_Number x = luaL_checknumber(L, 1);
+	double d = x > 0.0 ? 0.5 : -0.5;
+	int si = (int)(x * SINE_TABLE_SIZE / DPI + d);
+	int ci = si + (SINE_TABLE_SIZE >> 2);
+	d = x - si * (DPI / SINE_TABLE_SIZE);
+	si &= (SINE_TABLE_SIZE1);
+	ci &= (SINE_TABLE_SIZE1);
+	lua_pushnumber(L, sineTable[si] + (sineTable[ci] - 0.5 * sineTable[si] * d) * d );
+	return 1;
+}
+
+// fast_cos by Marc Pony(marc_pony@163.com)
+// Lua Version
+static int Cos(lua_State* L)
+{
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_Number x = luaL_checknumber(L, 1);
+	double d = x > 0.0 ? 0.5 : -0.5;
+	int ci = (int)(x * SINE_TABLE_SIZE / DPI + d);
+	int si = ci + (SINE_TABLE_SIZE >> 2);
+	d = x - ci * (DPI / SINE_TABLE_SIZE) ;
+	si &= (SINE_TABLE_SIZE1);
+	ci &= (SINE_TABLE_SIZE1);
+	lua_pushnumber(L, sineTable[si] - (sineTable[ci] + 0.5 * sineTable[si] * d) * d );
+	return 1;
+}
+
+// Carmack Square Root
+// Lua Version
+static int Sqrt(lua_State* L)
+{
+	DM_LUA_STACK_CHECK(L, 1);
+	float number = luaL_checknumber(L, 1);
+	union {float f;	u32 i;} conv = { .f = number };
+	conv.i  = 0x5f375a86 - (conv.i >> 1);
+	conv.f *= 1.5F - (number * 0.5F * conv.f * conv.f);
+	lua_pushnumber(L, 1.0f / conv.f );
+	return 1;
+}
+
 
 static int EASE(lua_State* L)
+{
+	// Engine Stack Check
+	DM_LUA_STACK_CHECK(L, 2);
+
+	// Gets Parameters
+	lua_Number ratio = luaL_checknumber(L, 1);
+	int type = (int)luaL_checknumber(L, 2);
+
+	switch(type)
+	{
+		case 1:
+		ratio = lua_Number( 1.0f / ArSqrtRev( 1.0f - float(ratio*ratio) ) );
+		ratio = 1.0 - ratio;
+		break;
+		case 2:
+		ratio = 1.0 - ratio;
+		ratio = lua_Number( 1.0f / ArSqrtRev( 1.0f - float(ratio*ratio) ) );
+		break;
+		case 3:
+		ratio *= ratio;
+		break;
+		case 4:
+		ratio = 1.0 - ratio;
+		ratio = 1.0 - ratio*ratio;
+		break;
+		case 5:
+		ratio *= ratio;
+		ratio *= ratio;
+		break;
+		case 6:
+		ratio = 1.0 - ratio;
+		ratio *= ratio;
+		ratio = 1 - ratio*ratio;
+		break;
+	}
+
+	// Return
+	lua_pushnumber(L, ratio);
+	return 1;
+}
+
+static int PEASE(lua_State* L)
 {
 	// Engine Stack Check
 	DM_LUA_STACK_CHECK(L, 3);
@@ -334,7 +425,7 @@ static int EASE(lua_State* L)
 		Reversed = true;
 	}
 	RX = ArIR + (ArER - ArIR) * RX;
-	RX /= 1000.0f;
+	RX /= 1000.0;
 	
 	lua_Number RY = RX;
 	// Caculate RX,RY by ArType
@@ -345,13 +436,13 @@ static int EASE(lua_State* L)
 			case 1: // xOutQuad
 			RX = 1 - RX;	RX = 1 - RX * RX;	break;
 			case 2: // xOutCirc
-			RX = 1 - RX;	RX = 1.0f / ArSqrtRev( 1 - RX * RX );	break;
+			RX = 1 - RX;	RX = 1.0 / ArSqrtRev( 1 - RX * RX );	break;
 			case 3: // xCosine
 			RX = ArCos( RX * IPI );	break;
 			case 4: // yOutQuad
 			RY = 1 - RY;	RY = 1 - RY * RY;	break;
 			case 5: // yOutCirc
-			RY = 1 - RY;	RY = 1.0f / ArSqrtRev( 1 - RY * RY );	break;
+			RY = 1 - RY;	RY = 1.0 / ArSqrtRev( 1 - RY * RY );	break;
 			case 6: // yCosine
 			RY = ArCos( RY * IPI );	break;
 			case 7: // xyOutQuad
@@ -365,13 +456,13 @@ static int EASE(lua_State* L)
 			case 1: // xInQuad
 				RX *= RX;	break;
 			case 2: // xInCirc
-				RX = 1 - RX*RX;	RX = 1 - 1.0f / ArSqrtRev(RX);	break;
+				RX = 1 - RX*RX;	RX = 1 - 1.0 / ArSqrtRev(RX);	break;
 			case 3: // xSine
 				RX = ArSin( RX * IPI );	break;
 			case 4: // yInQuad
 				RY *= RY;	break;
 			case 5: // yInCirc
-				RY = 1 - RY*RY;	RY = 1 - 1.0f / ArSqrtRev(RY);	break;
+				RY = 1 - RY*RY;	RY = 1 - 1.0 / ArSqrtRev(RY);	break;
 			case 6: // ySine
 				RY = ArSin( RY * IPI );	break;
 			case 7: // xyInQuad
@@ -390,17 +481,20 @@ static int EASE(lua_State* L)
 static const luaL_reg Module_methods[] =
 {
 	{"EASE", EASE},
+	{"PEASE", PEASE},
+	{"Sin", Sin},
+	{"Cos", Cos},
+	{"Sqrt", Sqrt},
 	{0, 0}
 };
 
 static void LuaInit(lua_State* L)
 {
-	int top = lua_gettop(L);
-
 	// Register lua names
+	// int top = lua_gettop(L);
 	luaL_register(L, MODULE_NAME, Module_methods);
 	lua_pop(L, 1);
-	assert(top == lua_gettop(L));
+	// assert(top == lua_gettop(L));
 }
 
 dmExtension::Result AppInitializeMyExtension(dmExtension::AppParams* params)
