@@ -1,3 +1,5 @@
+-- Aerials/Pragma/ArInput.script
+
 local hash = hash
 local post = msg.post
 local v3 = vmath.vector3
