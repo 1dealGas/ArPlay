@@ -1,3 +1,5 @@
+-- Aerials/Pragma/ArPlay.script
+
 go.property("fumen_id", 0)
 go.property("sound_speed", 1)
 go.property("display_losts", false)
