@@ -855,9 +855,9 @@ static inline int Ctint(lua_State* L)
 	if (ctint >= 2.0)
 	{
 		tintw = ctint - 2.0;
-		tintw = 1 - tintw / 0.237;
-		expand_wish = 1 + tintw * tintw / 2;
-		tintw = 1 - tintw * tintw * tintw;
+		tintw = 1.0 - tintw / 0.237;
+		expand_wish = 1.0 + tintw * tintw / 2.0;
+		tintw = 1.0 - tintw * tintw * tintw;
 	}
 	else if (ctint <= -2.0)
 	{
