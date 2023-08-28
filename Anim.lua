@@ -1,3 +1,4 @@
+-- Aerials/Pragma/Anim.script
 -- Settings.
 local HITCOMMON = vmath.vector4(1)
 local HITDAY = vmath.vector4(1,0.85546875,0.62890625,1)
