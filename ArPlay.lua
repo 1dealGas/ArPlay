@@ -622,8 +622,9 @@ function init(self)
 	--
 	--
 	-- Sets the Info, and Decreases the Index Depth when Polling.
+	-- Note that Defold doesn't support the method collectgarbage("stop").
 	if self.fumen_id < 2 then
-		gc("stop")
+		gc("setpause", 104857600)
 		set(Ar__current_sound, hash_sound_speed, self.sound_speed)
 		label_set_text(ArIf, fm.Info.Madeby)
 	end
