@@ -1448,7 +1448,7 @@ function update(self, tslf)
 								set(thisgo, hash_tint, hintlost(dt) )
 								if hgo_index>last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
-							elseif chint.w>1 and ago then
+							elseif ago and chint.w>1 then
 								pt = (progress-chint.w) / spd
 								vecs[i].z = -0.7 - pt*0.00001
 								thisgo = ago[ago_index]
@@ -1456,7 +1456,7 @@ function update(self, tslf)
 								send(thisgo, hash_ar_update, { pt, (chint.w-chint.z)/spd } )
 								ago_index = ago_index + 1
 							end
-						elseif dt<510 and chint.w>1 and ago then
+						elseif ago and dt<510 and chint.w>1 then
 							
 							pt = (progress-chint.w) / spd
 

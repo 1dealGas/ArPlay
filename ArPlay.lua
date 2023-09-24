@@ -1193,7 +1193,7 @@ function update(self, tslf)
 								set(thisgo, hash_tint, hintlost(dt) )
 								if hgo_index > last_hgo then send(thisgo, hash_enable) end
 								hgo_index = hgo_index + 1
-							elseif chintw>1 and ago then
+							elseif ago and chintw>1 then
 								pt = (progress-chintw) / spd
 								thisgo = ago[ago_index]
 								set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)
