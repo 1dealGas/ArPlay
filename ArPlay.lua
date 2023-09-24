@@ -262,10 +262,10 @@ local IpCam = P._IpCam
 local IpWish = P._IpWish
 local PHint_hasCam = P._PHint_hasCam
 local PWish_hasCam = P._PWish_hasCam
-local V3V4IsRepeated = P.V3V4IsRepeated
 local V3V4Apply = P.V3V4Apply
 local Ctint = P.Ctint
 local HAPos = P.HAPos
+local GetLVL = P.GetLVL
 
 --
 -- Input: Detection
@@ -982,20 +982,19 @@ function update(self, tslf)
 								end
 
 								if wish_interpolated then
-									local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
+									local _x, _y, _lvl = GetLVL(current_interpolated)
 									--
 									-- B.Appending for Initial Condition.
 									--
 									if ip_index == 1 then
 										tints[1] = V3V4Apply( vecs[1], current_interpolated )
-										last_vec[zi][floor(_x*109)+floor(_y*113)] = 1
+										last_vec[zi][_lvl] = 1
 										ip_index = 2
 									-- 
 									-- C.Appending after Other Wishes.
 									--
 									else
 										local not_repeated = true
-										local _lvl = floor(_x*109)+floor(_y*113)
 										local _lv = last_vec[zi][_lvl]
 
 										if _lv then
@@ -1057,21 +1056,20 @@ function update(self, tslf)
 						end
 
 						if wish_interpolated then
-							local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
-							local _zl,_zd = intfrac(_z)
+							local _x, _y, _lvl = GetLVL(current_interpolated)
+							local _zl = floor(current_interpolated.z)
 							--
 							-- B.Appending for Initial Condition.
 							--
 							if ip_index == 1 then
 								tints[1] = V3V4Apply( vecs[1], current_interpolated )
-								last_vec[_zl][floor(_x*109)+floor(_y*113)] = 1
+								last_vec[_zl][_lvl] = 1
 								ip_index = 2
 							-- 
 							-- C.Appending after Other Wishes.
 							--
 							else
 								local not_repeated = true
-								local _lvl = floor(_x*109)+floor(_y*113)
 								local _lv = last_vec[_zl][_lvl]
 
 								if _lv then

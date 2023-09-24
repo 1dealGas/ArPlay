@@ -826,26 +826,6 @@ static inline int V3V4Apply(lua_State* L)
 	return 1;
 }
 
-static inline int V3V4IsRepeated(lua_State* L)
-{
-	v3p a = dmScript::ToVector3(L, 1);
-	v4p b = dmScript::ToVector4(L, 2);
-	
-	int dz = int( a->getZ() ) - int( b->getZ() );
-	bool r = false;
-
-	if ( !dz )
-	{
-		float dx = a->getX() - b->getX();
-		float dy = a->getY() - b->getY();
-		if (dx<0.0001f && dy<0.0001f && dx>-0.0001f && dy>-0.0001f) { r = true; }
-	}
-
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_pushboolean(L, r);
-	return 1;
-}
-
 static inline int Ctint(lua_State* L)
 {
 	lua_Number ctint = lua_tonumber(L, 1);
@@ -855,9 +835,9 @@ static inline int Ctint(lua_State* L)
 	if (ctint >= 2.0)
 	{
 		tintw = ctint - 2.0;
-		tintw = 1.0 - tintw / 0.237;
-		expand_wish = 1.0 + tintw * tintw / 2.0;
-		tintw = 1.0 - tintw * tintw * tintw;
+		tintw = 1 - tintw / 0.237;
+		expand_wish = 1 + tintw * tintw / 2;
+		tintw = 1 - tintw * tintw * tintw;
 	}
 	else if (ctint <= -2.0)
 	{
@@ -887,6 +867,19 @@ static inline int HAPos(lua_State* L)
 	return 1;
 }
 
+static inline int GetLVL(lua_State* L)
+{
+	v4p cur = dmScript::ToVector4(L, 1);
+	float _x = cur->getX();
+	float _y = cur->getY();
+
+	DM_LUA_STACK_CHECK(L, 3);
+	lua_pushnumber(L, (lua_Number)_x);
+	lua_pushnumber(L, (lua_Number)_y);
+	lua_pushnumber(L, (int)(_x*109) + (int)(_y*113) );
+	return 3;
+}
+
 
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
@@ -903,9 +896,9 @@ static const luaL_reg Module_methods[] =
 	{"_PWish", _PWish},
 	{"_PWish_hasCam", _PWish_hasCam},
 	{"V3V4Apply", V3V4Apply},
-	{"V3V4IsRepeated", V3V4IsRepeated},
 	{"Ctint", Ctint},
 	{"HAPos", HAPos},
+	{"GetLVL", GetLVL},
 	{0, 0}
 };
 
