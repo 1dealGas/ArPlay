@@ -1132,14 +1132,14 @@ function update(self, tslf)
 										vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 										tints[1] = current_interpolated.w
 		
-										last_vec[zi][floor(_x*20+_y*20+(_z-zi)*20)] = 1
+										last_vec[zi][floor(_x*109)+floor(_y*113)] = 1
 										ip_index = 2
 									-- 
 									-- C.Appending after Other Wishes.
 									--
 									else
 										local not_repeated = true
-										local _lvl = floor(_x*20+_y*100+(_z-zi)*20)
+										local _lvl = floor(_x*109)+floor(_y*113)
 										local _lv = last_vec[zi][_lvl]
 		
 										if _lv then
@@ -1246,7 +1246,6 @@ function update(self, tslf)
 
 						if wish_interpolated then
 							local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
-							local _zl = floor(_z)
 							--
 							-- B.Appending for Initial Condition.
 							--
@@ -1254,14 +1253,14 @@ function update(self, tslf)
 								vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 								tints[1] = current_interpolated.w
 
-								last_vec[_zl][floor(_x*20+_y*20+(_z-_zl)*20)] = 1
+								last_vec[_zl][floor(_x*109)+floor(_y*113)] = 1
 								ip_index = 2
 							-- 
 							-- C.Appending after Other Wishes.
 							--
 							else
 								local not_repeated = true
-								local _lvl = floor(_x*20+_y*100+(_z-_zl)*20)
+								local _lvl = floor(_x*109)+floor(_y*113)
 								local _lv = last_vec[_zl][_lvl]
 
 								if _lv then

@@ -717,6 +717,7 @@ local hash_ar_show_options = hash("ar_show_options")
 local hash_ar_hide_options = hash("ar_hide_options")
 local hash_ar_toggle_daymode = hash("ar_toggle_daymode")
 local hash_ar_update_time = hash("ar_update_time")
+local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function on_message(self, message_id, message, _sender)
 	--
 	-- Hint(x,y,z,w)
@@ -895,6 +896,7 @@ local frame_limit_gc = 0
 local time = socket.gettime
 local last_culled,last_hgo,last_ago = 0,0,0
 local last_score,last_losts,last_string = false,false,""
+local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function update(self, tslf)
 	if Ar__active and (not Ar__focuslost) then
 
@@ -980,33 +982,30 @@ function update(self, tslf)
 								end
 
 								if wish_interpolated then
+									local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
 									--
 									-- B.Appending for Initial Condition.
 									--
 									if ip_index == 1 then
-										tints[1] = V3V4Apply(vecs[1],current_interpolated)
+										tints[1] = V3V4Apply( vecs[1], current_interpolated )
+										last_vec[zi][floor(_x*109)+floor(_y*113)] = 1
 										ip_index = 2
-										-- 
-										-- C.Appending after Other Wishes.
-										--
+									-- 
+									-- C.Appending after Other Wishes.
+									--
 									else
 										local not_repeated = true
-										local dz = 0
-										for i = ip_index-1, 1, -1 do
-											dz = floor(vecs[i].z) - floor(current_interpolated.z)
-											if dz==0 then
-												local dx = vecs[i].x - current_interpolated.x
-												local dy = vecs[i].y - current_interpolated.y
-												if dx<0.0001 and dy<0.0001 and dx>-0.0001 and dy>-0.0001 then
-													tints[i] = 0
-													not_repeated = false
-													break
-												end
-											end
+										local _lvl = floor(_x*109)+floor(_y*113)
+										local _lv = last_vec[zi][_lvl]
+
+										if _lv then
+											tints[_lv] = 0
+											not_repeated = false
 										end
 
 										if not_repeated then
-											tints[ip_index] = V3V4Apply(vecs[ip_index],current_interpolated)
+											tints[ip_index] = V3V4Apply( vecs[ip_index], current_interpolated )
+											last_vec[zi][_lvl] = ip_index
 											ip_index = ip_index + 1
 										end
 										
@@ -1058,31 +1057,46 @@ function update(self, tslf)
 						end
 
 						if wish_interpolated then
+							local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
+							local _zl,_zd = intfrac(_z)
 							--
 							-- B.Appending for Initial Condition.
 							--
 							if ip_index == 1 then
-								tints[1] = V3V4Apply(vecs[1],current_interpolated)
+								tints[1] = V3V4Apply( vecs[1], current_interpolated )
+								last_vec[_zl][floor(_x*109)+floor(_y*113)] = 1
 								ip_index = 2
-								-- 
-								-- C.Appending after Other Wishes.
-								--
+							-- 
+							-- C.Appending after Other Wishes.
+							--
 							else
 								local not_repeated = true
-								for i = ip_index-1, 1, -1 do
-									if V3V4IsRepeated(vecs[i], current_interpolated) then
-										tints[i] = 0
-										not_repeated = false
-										break
-									end
+								local _lvl = floor(_x*109)+floor(_y*113)
+								local _lv = last_vec[_zl][_lvl]
+
+								if _lv then
+									tints[_lv] = 0
+									not_repeated = false
 								end
+
 								if not_repeated then
-									tints[ip_index] = V3V4Apply(vecs[ip_index],current_interpolated)
+									tints[ip_index] = V3V4Apply( vecs[ip_index], current_interpolated )
+									last_vec[_zl][_lvl] = ip_index
 									ip_index = ip_index + 1
 								end
+								
 							end
 						end
 					end
+				end
+			end
+			--
+			-- Cleanup.
+			--
+			for ly = 1,16 do
+				local _lv = last_vec[ly]
+				for k, _ in pairs(_lv) do
+					_lv[k] = nil
 				end
 			end
 			--
