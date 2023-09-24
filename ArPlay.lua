@@ -120,12 +120,12 @@ go.property("options", false)
 --   return f
 --
 --   1. At the Head of Each Wish Group, Poll Progress(3) and ZIndex(z) Are Contained.
---   2. x[0,16]  y[0,8]  z:int[1,16]
---   3. Wish Node: v(x,y,time,easetype);  Hint: v(x,y,mstime,z);  For easetype, See the Function ease().
---   4. "time" Refers to mstime if DTime is Disabled, and to DTime if DTime is Enabled.
+--   2. x[0,16]  y[0,8]  z: zlayer(int[1,16]) + zdelta(float[0,0.9])
+--   3. Wish Node: v(x,y,time,easetype);  Hint: v(x,y,mstime,z).
+--   4. "time" Refers to mstime if DTime is Disabled, or DTime if DTime is Enabled.
 --   5. For "easetype", See the Function ease().
 --   6. For Empty Tables( {} ), Replace them with e.
---   7. Wish&Hint Index Begins at 0.
+--   7. Wish&Hint Index Begins at 1.
 --   8. Madeby: "Level  Author"
 --
 --
