@@ -732,17 +732,14 @@ function on_message(self, message_id, message, _sender)
 
 		-- Preparations.
 		--
-		local spd = self.sound_speed
-		local origtime = message[1]
+		local spd, origtime = self.sound_speed, message[1]
 		local itime = (origtime - Ar__init_time - Ar__paused_time)*spd - Ar__audio_delay + Ar__input_delay
 		if itime<2 then itime=2 end
 
 		-- Optimization for Multiple ArPlay Instances.
 		--
 		if itime>=self.Init and itime<self.End then
-			local current_index_group = 0
-			current_index_group = floor(itime/self.index_scale)
-			current_index_group = current_index_group + 1
+			local current_index_group = floor(itime/self.index_scale) + 1
 			if current_index_group < 1 then current_index_group = 1 end
 
 			local touch = message
@@ -771,8 +768,7 @@ function on_message(self, message_id, message, _sender)
 			--
 			if touch[2] then
 				--
-				local dt = 0
-				local mint = 0
+				local mint, dt, chz, chw = 0
 				safe()
 				--
 				--------  Judge Start  --------
@@ -782,40 +778,44 @@ function on_message(self, message_id, message, _sender)
 						for i=1,#target do
 							chid = target[i]
 							chint = hint[chid]
+							chz = chint.z
+							chw = chint.w
+
+							-- Asserted to be Sorted
+							dt = (itime - chz) / spd
+							if dt <- SWEEP then break end
 
 							local htn = has_touch_near(chint.x, chint.y, touch, selfx)
-							if chint.w==0 or chint.w==-1 then
+							if chw == 0 or chw == -1 then
 								if htn then
 									chint.w = -1
+									chw = -1
 								else
 									chint.w = 0
 								end
-							elseif (chint.w < -1) and not htn then
-								chint.w = -chint.w
+							elseif (chw < -1) and not htn then
+								chint.w = -chw
 							end
 
-							if chint.w == -1 then
-								dt = (itime - chint.z)/spd
-								if dt<SWEEP and dt>-SWEEP then
-									local issafe = safe(chint.x, chint.y)  -- Must Register the Current Pivot.
-									if mint==0 or mint==chint.z then
-										if mint==0 then
-											mint=chint.z
-										end
-										chint.w = -itime
-										if dt<HITZONE and dt>-HITZONE then
-											Ar__current_score = Ar__current_score + 1
-											has_hint_judged = true
-										else
-											Ar__current_lost = Ar__current_lost + 1
-											has_hint_judged = true
-										end
-									elseif dt<HITZONE and dt>-HITZONE and issafe then
-										chint.w = -itime
-										Ar__current_score = Ar__current_score + 1
-										has_hint_judged = true
-									end
+							if chw == -1 and dt<SWEEP then
+								
+								local issafe = safe(chint.x, chint.y)  -- Must Register the Current Pivot.
+								if mint == 0 or mint == chz then
+									
+									if mint==0 then mint=chz end
+									has_hint_judged = true
+									chint.w = -itime
+									
+									if dt<HITZONE and dt>-HITZONE then Ar__current_score = Ar__current_score + 1
+									else Ar__current_lost = Ar__current_lost + 1
+									end									
+									
+								elseif dt<HITZONE and dt>-HITZONE and issafe then
+									Ar__current_score = Ar__current_score + 1
+									has_hint_judged = true
+									chint.w = -itime
 								end
+								
 							end
 						end
 					end
@@ -823,8 +823,7 @@ function on_message(self, message_id, message, _sender)
 				--------  Judge Complete  --------
 				if has_hint_judged and haptics_supported and Ar__haptics then
 					if origtime-last_vibration_time <= 37 then
-					else
-						last_vibration_time = origtime
+					else last_vibration_time = origtime
 						if iosh then hapticsfunc(iosh)
 						else hapticsfunc()
 						end
@@ -833,20 +832,27 @@ function on_message(self, message_id, message, _sender)
 			else
 				for t=-1,1 do
 					target = hindex[current_index_group+t]
+					local dt, chz, chw
 					if (target) and #target~=0 then
 						for i=1,#target do
+							
 							chid = target[i]
 							chint = hint[chid]
+							chz = chint.z
+							chw = chint.w
+
+							-- Asserted to be Sorted
+							dt = (itime - chz) / spd
+							if dt <- SWEEP then break end
+							
 							local htn = has_touch_near(chint.x, chint.y, touch, selfx)
-							if chint.w==0 or chint.w==-1 then
-								if htn then
-									chint.w = -1
-								else
-									chint.w = 0
+							if chw==0 or chw==-1 then
+								if htn then chint.w = -1
+								else chint.w = 0
 								end
-							elseif (chint.w < -1) and not htn then
-								chint.w = -chint.w
+							elseif (chw < -1) and not htn then chint.w = -chw
 							end
+							
 						end
 					end
 				end
