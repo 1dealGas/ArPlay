@@ -1163,6 +1163,7 @@ function update(self, tslf)
 						if dt>SWEEP and (chint.w==0 or chint.w==-1) then
 							chint.w = 1
 							Ar__current_lost = Ar__current_lost + 1
+						elseif dt<-510 then break  -- Asserted to be Sorted.
 						end
 						--
 						local thisgo = false
@@ -1214,7 +1215,7 @@ function update(self, tslf)
 							set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)
 							send(thisgo, hash_ar_update, { (progress-chint.w)/spd, (chint.w-chint.z)/spd } )
 							ago_index = ago_index + 1
-						elseif dt>=-510 and dt<-370 then
+						elseif dt<-370 then
 							thisgo = hgo[hgo_index]
 							set_position( HAPos(vecs[i], chint, -0.75-dt*0.00001), thisgo)
 							set(thisgo, hash_tint, hintinit(dt) )
