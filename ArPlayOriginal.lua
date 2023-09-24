@@ -119,12 +119,12 @@ go.property("options", false)
 --   return f
 --
 --   1. At the Head of Each Wish Group, Poll Progress(3) and ZIndex(z) Are Contained.
---   2. x[0,16]  y[0,8]  z: zlayer(int[1,16]) + zdelta(float[0,0.9])
---   3. Wish Node: v(x,y,time,easetype);  Hint: v(x,y,mstime,z).
---   4. "time" Refers to mstime if DTime is Disabled, or DTime if DTime is Enabled.
+--   2. x[0,16]  y[0,8]  z:int[1,16]
+--   3. Wish Node: v(x,y,time,easetype);  Hint: v(x,y,mstime,z);  For easetype, See the Function ease().
+--   4. "time" Refers to mstime if DTime is Disabled, and to DTime if DTime is Enabled.
 --   5. For "easetype", See the Function ease().
 --   6. For Empty Tables( {} ), Replace them with e.
---   7. Wish&Hint Index Begins at 1.
+--   7. Wish&Hint Index Begins at 0.
 --   8. Madeby: "Level  Author"
 --
 --
@@ -992,6 +992,7 @@ local frame_limit_gc = 0
 local time = socket.gettime
 local last_culled,last_hgo,last_ago = 0,0,0
 local last_score,last_losts,last_string = false,false,""
+local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function update(self, tslf)
 	if Ar__active and (not Ar__focuslost) then
 
@@ -1123,39 +1124,33 @@ function update(self, tslf)
 								end
 
 								if wish_interpolated then
+									local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
 									--
 									-- B.Appending for Initial Condition.
 									--
 									if ip_index == 1 then
-										vecs[1].x = current_interpolated.x
-										vecs[1].y = current_interpolated.y
-										vecs[1].z = current_interpolated.z
+										vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 										tints[1] = current_interpolated.w
+		
+										last_vec[zi][floor(_x*20+_y*20+(_z-zi)*20)] = 1
 										ip_index = 2
-										-- 
-										-- C.Appending after Other Wishes.
-										--
+									-- 
+									-- C.Appending after Other Wishes.
+									--
 									else
 										local not_repeated = true
-										local dz = 0
-										for i = ip_index-1, 1, -1 do
-											dz = floor(vecs[i].z) - floor(current_interpolated.z)
-											if dz==0 then
-												local dx = vecs[i].x - current_interpolated.x
-												local dy = vecs[i].y - current_interpolated.y
-												if dx<0.0001 and dy<0.0001 and dx>-0.0001 and dy>-0.0001 then
-													tints[i] = 0
-													not_repeated = false
-													break
-												end
-											end
+										local _lvl = floor(_x*20+_y*100+(_z-zi)*20)
+										local _lv = last_vec[zi][_lvl]
+		
+										if _lv then
+											tints[_lv] = 0
+											not_repeated = false
 										end
-
+		
 										if not_repeated then
-											vecs[ip_index].x = current_interpolated.x
-											vecs[ip_index].y = current_interpolated.y
-											vecs[ip_index].z = current_interpolated.z
+											vecs[ip_index].x, vecs[ip_index].y, vecs[ip_index].z = _x, _y, _z
 											tints[ip_index] = current_interpolated.w
+											last_vec[zi][_lvl] = ip_index
 											ip_index = ip_index + 1
 										end
 									end
@@ -1250,44 +1245,48 @@ function update(self, tslf)
 						end
 
 						if wish_interpolated then
+							local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
+							local _zl = floor(_z)
 							--
 							-- B.Appending for Initial Condition.
 							--
 							if ip_index == 1 then
-								vecs[1].x = current_interpolated.x
-								vecs[1].y = current_interpolated.y
-								vecs[1].z = current_interpolated.z
+								vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 								tints[1] = current_interpolated.w
+
+								last_vec[_zl][floor(_x*20+_y*20+(_z-_zl)*20)] = 1
 								ip_index = 2
-								-- 
-								-- C.Appending after Other Wishes.
-								--
+							-- 
+							-- C.Appending after Other Wishes.
+							--
 							else
 								local not_repeated = true
-								local dz = 0
-								for i = ip_index-1, 1, -1 do
-									dz = floor(vecs[i].z) - floor(current_interpolated.z)
-									if dz==0 then
-										local dx = vecs[i].x - current_interpolated.x
-										local dy = vecs[i].y - current_interpolated.y
-										if dx<0.0001 and dy<0.0001 and dx>-0.0001 and dy>-0.0001 then
-											tints[i] = 0
-											not_repeated = false
-											break
-										end
-									end
+								local _lvl = floor(_x*20+_y*100+(_z-_zl)*20)
+								local _lv = last_vec[_zl][_lvl]
+
+								if _lv then
+									tints[_lv] = 0
+									not_repeated = false
 								end
 
 								if not_repeated then
-									vecs[ip_index].x = current_interpolated.x
-									vecs[ip_index].y = current_interpolated.y
-									vecs[ip_index].z = current_interpolated.z
+									vecs[ip_index].x, vecs[ip_index].y, vecs[ip_index].z = _x, _y, _z
 									tints[ip_index] = current_interpolated.w
+									last_vec[_zl][_lvl] = ip_index
 									ip_index = ip_index + 1
-								end	
+								end
 							end
 						end
 					end
+				end
+			end
+			--
+			-- Cleanup.
+			--
+			for ly = 1,16 do
+				local _lv = last_vec[ly]
+				for k, _ in pairs(_lv) do
+					_lv[k] = nil
 				end
 			end
 			--
