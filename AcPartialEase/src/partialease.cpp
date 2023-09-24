@@ -870,14 +870,10 @@ static inline int HAPos(lua_State* L)
 static inline int GetLVL(lua_State* L)
 {
 	v4p cur = dmScript::ToVector4(L, 1);
-	float _x = cur->getX();
-	float _y = cur->getY();
-
-	DM_LUA_STACK_CHECK(L, 3);
-	lua_pushnumber(L, (lua_Number)_x);
-	lua_pushnumber(L, (lua_Number)_y);
-	lua_pushnumber(L, (int)(_x*109) + (int)(_y*113) );
-	return 3;
+	DM_LUA_STACK_CHECK(L, 2);
+	lua_pushnumber(L, (int)(cur->getX()*109) + (int)(cur->getY()*113) );
+	lua_pushnumber(L, (int)cur->getZ() );
+	return 2;
 }
 
 

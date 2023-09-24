@@ -165,16 +165,14 @@
       type: number
   - name: GetLVL
     type: function
-    desc: Get a Vector4's PosX&PosY, and its LVLHash(for Overlap Detection usage).
+    desc: Get a Vector4's LVLHash(for Overlap Detection usage) and ZLayer Value.
     parameters:
     - name: a
       type: vector4
     returns:
-    - name: posx
-      type: number
-    - name: posy
-      type: number
     - name: lvlhash
+      type: number
+    - name: zlayer
       type: number
   - name: Ctint
     type: function

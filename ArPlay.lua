@@ -717,7 +717,6 @@ local hash_ar_show_options = hash("ar_show_options")
 local hash_ar_hide_options = hash("ar_hide_options")
 local hash_ar_toggle_daymode = hash("ar_toggle_daymode")
 local hash_ar_update_time = hash("ar_update_time")
-local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function on_message(self, message_id, message, _sender)
 	--
 	-- Hint(x,y,z,w)
@@ -897,6 +896,7 @@ local time = socket.gettime
 local last_culled,last_hgo,last_ago = 0,0,0
 local last_score,last_losts,last_string = false,false,""
 local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
+local lvls = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function update(self, tslf)
 	if Ar__active and (not Ar__focuslost) then
 
@@ -982,32 +982,27 @@ function update(self, tslf)
 								end
 
 								if wish_interpolated then
-									local _x, _y, _lvl = GetLVL(current_interpolated)
+									local _lastvec, _lvls, _lvl = last_vec[zi], lvls[zi], GetLVL(current_interpolated)
 									--
 									-- B.Appending for Initial Condition.
 									--
 									if ip_index == 1 then
 										tints[1] = V3V4Apply( vecs[1], current_interpolated )
-										last_vec[zi][_lvl] = 1
+										_lastvec[_lvl] = 1
+										_lvls[1] = _lvl
 										ip_index = 2
 									-- 
 									-- C.Appending after Other Wishes.
 									--
 									else
-										local not_repeated = true
-										local _lv = last_vec[zi][_lvl]
-
-										if _lv then
-											tints[_lv] = 0
-											not_repeated = false
-										end
-
-										if not_repeated then
+										local _lv = _lastvec[_lvl]
+										if _lv then tints[_lv] = 0
+										else
 											tints[ip_index] = V3V4Apply( vecs[ip_index], current_interpolated )
-											last_vec[zi][_lvl] = ip_index
+											_lastvec[_lvl] = ip_index
+											_lvls[#_lvls+1] = _lvl
 											ip_index = ip_index + 1
 										end
-										
 									end
 								end
 							end
@@ -1056,33 +1051,28 @@ function update(self, tslf)
 						end
 
 						if wish_interpolated then
-							local _x, _y, _lvl = GetLVL(current_interpolated)
-							local _zl = floor(current_interpolated.z)
+							local _lvl, _zl = GetLVL(current_interpolated)
+							local _lastvec, _lvls = last_vec[_zl], lvls[_zl]
 							--
 							-- B.Appending for Initial Condition.
 							--
 							if ip_index == 1 then
 								tints[1] = V3V4Apply( vecs[1], current_interpolated )
-								last_vec[_zl][_lvl] = 1
+								_lastvec[_lvl] = 1
+								_lvls[1] = _lvl
 								ip_index = 2
 							-- 
 							-- C.Appending after Other Wishes.
 							--
 							else
-								local not_repeated = true
-								local _lv = last_vec[_zl][_lvl]
-
-								if _lv then
-									tints[_lv] = 0
-									not_repeated = false
-								end
-
-								if not_repeated then
+								local _lv = _lastvec[_lvl]
+								if _lv then tints[_lv] = 0
+								else
 									tints[ip_index] = V3V4Apply( vecs[ip_index], current_interpolated )
-									last_vec[_zl][_lvl] = ip_index
+									_lastvec[_lvl] = ip_index
+									_lvls[#_lvls+1] = _lvl
 									ip_index = ip_index + 1
 								end
-								
 							end
 						end
 					end
@@ -1092,9 +1082,10 @@ function update(self, tslf)
 			-- Cleanup.
 			--
 			for ly = 1,16 do
-				local _lv = last_vec[ly]
-				for k, _ in pairs(_lv) do
-					_lv[k] = nil
+				local _lv, _lvls = last_vec[ly], lvls[ly]
+				for it = 1, #_lvls do
+					_lv[ _lvls[it] ] = nil
+					_lvls[it] = nil
 				end
 			end
 			--
@@ -1209,7 +1200,7 @@ function update(self, tslf)
 								send(thisgo, hash_ar_update, { pt, (chint.w-chint.z)/spd } )
 								ago_index = ago_index + 1
 							end
-						elseif dt<510 and chintw>1 and ago then						
+						elseif ago and dt<510 and chintw>1 then						
 							pt = (progress-chintw) / spd
 							thisgo = ago[ago_index]
 							set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)

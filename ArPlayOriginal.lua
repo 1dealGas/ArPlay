@@ -993,6 +993,7 @@ local time = socket.gettime
 local last_culled,last_hgo,last_ago = 0,0,0
 local last_score,last_losts,last_string = false,false,""
 local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
+local lvls = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
 function update(self, tslf)
 	if Ar__active and (not Ar__focuslost) then
 
@@ -1125,6 +1126,7 @@ function update(self, tslf)
 
 								if wish_interpolated then
 									local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
+									local _lastvec, _lvls, _lvl = last_vec[zi], lvls[zi]
 									--
 									-- B.Appending for Initial Condition.
 									--
@@ -1132,26 +1134,28 @@ function update(self, tslf)
 										vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 										tints[1] = current_interpolated.w
 		
-										last_vec[zi][floor(_x*109)+floor(_y*113)] = 1
+										_lvl = floor(_x*109)+floor(_y*113)
+										_lastvec[_lvl] = 1
+										_lvls[1] = _lvl
+
 										ip_index = 2
 									-- 
 									-- C.Appending after Other Wishes.
 									--
 									else
-										local not_repeated = true
-										local _lvl = floor(_x*109)+floor(_y*113)
-										local _lv = last_vec[zi][_lvl]
-		
-										if _lv then
-											tints[_lv] = 0
-											not_repeated = false
-										end
-		
-										if not_repeated then
+										_lvl = floor(_x*109)+floor(_y*113)
+										local _lv = _lastvec[_lvl]
+
+										if _lv then tints[_lv] = 0
+										else
+
 											vecs[ip_index].x, vecs[ip_index].y, vecs[ip_index].z = _x, _y, _z
 											tints[ip_index] = current_interpolated.w
-											last_vec[zi][_lvl] = ip_index
+
+											_lastvec[_lvl] = ip_index
+											_lvls[#_lvls+1] = _lvl
 											ip_index = ip_index + 1
+
 										end
 									end
 								end
@@ -1246,6 +1250,8 @@ function update(self, tslf)
 
 						if wish_interpolated then
 							local _x, _y, _z = current_interpolated.x, current_interpolated.y, current_interpolated.z
+							local _zl = floor(_z)
+							local _lastvec, _lvls, _lvl = last_vec[_zl], lvls[_zl]
 							--
 							-- B.Appending for Initial Condition.
 							--
@@ -1253,26 +1259,28 @@ function update(self, tslf)
 								vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 								tints[1] = current_interpolated.w
 
-								last_vec[_zl][floor(_x*109)+floor(_y*113)] = 1
+								_lvl = floor(_x*109)+floor(_y*113)
+								_lastvec[_lvl] = 1
+								_lvls[1] = _lvl
+
 								ip_index = 2
 							-- 
 							-- C.Appending after Other Wishes.
 							--
 							else
-								local not_repeated = true
-								local _lvl = floor(_x*109)+floor(_y*113)
-								local _lv = last_vec[_zl][_lvl]
+								_lvl = floor(_x*109)+floor(_y*113)
+								local _lv = _lastvec[_lvl]
 
-								if _lv then
-									tints[_lv] = 0
-									not_repeated = false
-								end
+								if _lv then tints[_lv] = 0
+								else
 
-								if not_repeated then
 									vecs[ip_index].x, vecs[ip_index].y, vecs[ip_index].z = _x, _y, _z
 									tints[ip_index] = current_interpolated.w
-									last_vec[_zl][_lvl] = ip_index
+
+									_lastvec[_lvl] = ip_index
+									_lvls[#_lvls+1] = _lvl
 									ip_index = ip_index + 1
+
 								end
 							end
 						end
@@ -1283,9 +1291,10 @@ function update(self, tslf)
 			-- Cleanup.
 			--
 			for ly = 1,16 do
-				local _lv = last_vec[ly]
-				for k, _ in pairs(_lv) do
-					_lv[k] = nil
+				local _lv, _lvls = last_vec[ly], lvls[ly]
+				for it = 1, #_lvls do
+					_lv[ _lvls[it] ] = nil
+					_lvls[it] = nil
 				end
 			end
 			--
@@ -1392,7 +1401,6 @@ function update(self, tslf)
 						if dt>SWEEP and (chint.w==0 or chint.w==-1) then
 							chint.w = 1
 							Ar__current_lost = Ar__current_lost + 1
-						elseif dt<-510 then break  -- Asserted to be Sorted.
 						end
 						--
 						local thisgo = false
@@ -1459,7 +1467,7 @@ function update(self, tslf)
 							set_position(vecs[i], thisgo)
 							send(thisgo, hash_ar_update, { (progress-chint.w)/spd, (chint.w-chint.z)/spd } )
 							ago_index = ago_index + 1
-						elseif dt<-370 then
+						elseif dt>=-510 and dt<-370 then
 							vecs[i].x = chint.x
 							vecs[i].y = chint.y
 							vecs[i].z = -0.75 - dt*0.00001
