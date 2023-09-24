@@ -266,6 +266,7 @@ local V3V4Apply = P.V3V4Apply
 local Ctint = P.Ctint
 local HAPos = P.HAPos
 local GetLVL = P.GetLVL
+local NewTable = P.newtable
 
 --
 -- Input: Detection
@@ -339,10 +340,10 @@ end
 --
 -- Update: DTime and Camera System
 --
-local last_since = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-local last_to = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-local last_base = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-local last_ratio = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+local last_since = NewTable(16,0)
+local last_to = NewTable(16,0)
+local last_base = NewTable(16,0)
+local last_ratio = NewTable(16,0)
 local function ArDTime(nodes, progress, zindex)
 	--
 	-- DTime Nodes:
@@ -583,7 +584,7 @@ function init(self)
 	local traited = fm.Info.Traits
 	if traited.Camera then
 		local cam_prim = traited.Camera
-		self.Camera = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}
+		self.Camera = NewTable(16,0)
 		for i=1,16 do
 			if cam_prim[i] then self.Camera[i] = cam_prim[i] end
 		end
@@ -591,13 +592,13 @@ function init(self)
 	if traited.DTime then
 		local dt_prim = traited.DTime
 		
-		self.DTime = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}
+		self.DTime = NewTable(16,0)
 		for i=1,16 do
 			if dt_prim[i] then self.DTime[i] = dt_prim[i] end
 		end
 		ArDTime()
 		
-		self.has = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}
+		self.has = NewTable(16,0)
 		local w = fm.Wish
 		local h = fm.Hint
 		local zg = 0
@@ -895,8 +896,14 @@ local frame_limit_gc = 0
 local time = socket.gettime
 local last_culled,last_hgo,last_ago = 0,0,0
 local last_score,last_losts,last_string = false,false,""
-local last_vec = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
-local lvls = { {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }
+
+local last_vec = NewTable(16,0)
+local lvls = NewTable(16,0)
+for i=1,16 do
+	last_vec[i] = NewTable(0,256)
+	lvls[i] = NewTable(256,0)
+end
+
 function update(self, tslf)
 	if Ar__active and (not Ar__focuslost) then
 

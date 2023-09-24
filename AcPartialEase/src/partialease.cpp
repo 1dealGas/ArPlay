@@ -876,6 +876,14 @@ static inline int GetLVL(lua_State* L)
 	return 2;
 }
 
+static inline int ntb(lua_State* L)
+{
+	int asize = luaL_checknumber(L, 1);
+	int hsize = luaL_checknumber(L, 2);
+	DM_LUA_STACK_CHECK(L, 1);
+	lua_createtable(L, asize, hsize);
+	return 1;
+}
 
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
@@ -895,6 +903,7 @@ static const luaL_reg Module_methods[] =
 	{"Ctint", Ctint},
 	{"HAPos", HAPos},
 	{"GetLVL", GetLVL},
+	{"newtable", ntb},
 	{0, 0}
 };
 
