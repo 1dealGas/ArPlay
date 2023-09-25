@@ -221,6 +221,8 @@ local hash_sound_speed = hash("speed")
 local tdelay = timer.delay
 local gc = collectgarbage
 local str_step = "step"
+local str_setpause = "setpause"
+local str_collect = "collect"
 
 local send = msg.post
 local spawn_from = factory.create
@@ -279,6 +281,13 @@ local function ease(ratio, typeid)
 	elseif typeid == 6 then easecalc = 1 - ratio; easecalc = easecalc*easecalc; return ( 1 - easecalc*easecalc )
 	else return ratio end
 end
+
+--  Table Utils
+local tu = require("AcTableUtil.purelua_ver")
+local TableUpdateSize = tu.tableupdatesize
+local TableAppend = tu.tableappend
+local LEN = tu.LEN
+
 --
 -- Input: Detection
 --
@@ -341,11 +350,10 @@ local function safe(x,y)
 			end
 			return fsafe
 		end
-	elseif #blocked~=0 then
+	elseif LEN[blocked] ~= 0 then
 		blnum = 0
-		for i=#blocked,1,-1 do
-			blocked[i] = nil
-		end
+		for i = LEN[blocked], 1, -1 do blocked[i] = nil end
+		TableUpdateSize(blocked)
 	end
 end
 --
@@ -368,7 +376,7 @@ local function ArDTime(nodes, progress, zindex)
 	if nodes then
 
 		local zn = nodes[zindex]
-		if (zn) and #zn>1 and progress>=zn[2].x then
+		if (zn) and LEN[zn] > 1 and progress>=zn[2].x then
 
 			local ls = last_since[zindex]
 			if progress>=ls and progress<last_to[zindex] then
@@ -376,7 +384,7 @@ local function ArDTime(nodes, progress, zindex)
 			else
 
 				-- Gets Poll Progress, and Guards the Progress.
-				local znlen = #zn
+				local znlen = LEN[zn]
 				local poll_progress = zn[1]
 				while poll_progress > 2 and progress < zn[poll_progress].x do
 					poll_progress = poll_progress - 1
@@ -460,9 +468,9 @@ local function ArCamera(nodes, progress, zindex)
 		if nodes[zf] then
 			local zn = nodes[zf]
 			
-			if (zn[1]) and #zn[1]>1 and progress>=zn[1][2].x then
+			if (zn[1]) and LEN[zn[1]] > 1 and progress>=zn[1][2].x then
 				local znt = zn[1]
-				local zntlen = #znt
+				local zntlen = LEN[znt]
 				if progress >= znt[zntlen].x then
 					xscale = znt[zntlen].y
 				else
@@ -488,9 +496,9 @@ local function ArCamera(nodes, progress, zindex)
 				end
 			end
 
-			if (zn[2]) and #zn[2]>1 and progress>=zn[2][2].x then
+			if (zn[2]) and LEN[zn[2]] > 1 and progress>=zn[2][2].x then
 				local znt = zn[2]
-				local zntlen = #znt
+				local zntlen = LEN[znt]
 				if progress >= znt[zntlen].x then
 					yscale = znt[zntlen].y
 				else
@@ -516,9 +524,9 @@ local function ArCamera(nodes, progress, zindex)
 				end
 			end
 
-			if (zn[3]) and #zn[3]>1 and progress>=zn[3][2].x then
+			if (zn[3]) and LEN[zn[3]] > 1 and progress>=zn[3][2].x then
 				local znt = zn[3]
-				local zntlen = #znt
+				local zntlen = LEN[znt]
 				if progress >= znt[zntlen].x then
 					rotrad = znt[zntlen].y
 				else
@@ -544,9 +552,9 @@ local function ArCamera(nodes, progress, zindex)
 				end
 			end
 
-			if (zn[4]) and #zn[4]>1 and progress>=zn[4][2].x then
+			if (zn[4]) and LEN[zn[4]] > 1 and progress>=zn[4][2].x then
 				local znt = zn[4]
-				local zntlen = #znt
+				local zntlen = LEN[znt]
 				if progress >= znt[zntlen].x then
 					xdelta = znt[zntlen].y
 				else
@@ -572,9 +580,9 @@ local function ArCamera(nodes, progress, zindex)
 				end
 			end
 
-			if (zn[5]) and #zn[5]>1 and progress>=zn[5][2].x then
+			if (zn[5]) and LEN[zn[5]] > 1 and progress>=zn[5][2].x then
 				local znt = zn[5]
-				local zntlen = #znt
+				local zntlen = LEN[znt]
 				if progress >= znt[zntlen].x then
 					ydelta = znt[zntlen].y
 				else
@@ -675,11 +683,11 @@ function init(self)
 		local h = fm.Hint
 		local zg = 0
 
-		for g=1,#w do
+		for g = 1, LEN[w] do
 			zg = floor(w[g][2])
 			self.has[zg] = true
 		end
-		for hi=1,#h do
+		for hi = 1, LEN[h] do
 			zg = floor(h[hi].w)
 			self.has[zg] = true
 		end
@@ -687,7 +695,7 @@ function init(self)
 	end
 	if traited.ArIf then
 		local _if = traited.ArIf
-		if _if[3]~=nil and #_if%2==1 then
+		if _if[3] ~= nil and LEN[_if] % 2 == 1 then
 			last_arif_progress = 0
 			self.ArIf = _if
 		end
@@ -727,7 +735,7 @@ function init(self)
 	local hints = self.Hint
 	if self.Camera then
 		local cam = self.Camera
-		for i=1, #hints do
+		for i=1, LEN[hints] do
 			-- Camera Configuration for Current Frame.
 			local pos = hints[i]
 			local posx = pos.x
@@ -754,7 +762,7 @@ function init(self)
 		end
 		ArCamera(cam)
 	else
-		for i=1, #hints do
+		for i=1, LEN[hints] do
 			hints[i].x = hints[i].x * 112.5
 			hints[i].y = hints[i].y * 112.5 + 90
 			hints[i].w = 0
@@ -766,7 +774,7 @@ function init(self)
 
 	local w = self.Wgo
 	local typ = hash(tostr(Ar__current_song_id))
-	for i=1,#w do
+	for i = 1, LEN[w] do
 		currenthash = spawn_from(ArcWish)
 		parent(currenthash, self_url)
 		currenthash = url(Ar, currenthash, hash_sprite)
@@ -776,7 +784,7 @@ function init(self)
 	end
 
 	local h = self.Hgo
-	for i=1,#h do
+	for i = 1, LEN[h] do
 		currenthash = spawn_from(ArcHint)
 		parent(currenthash, self_url)
 		currenthash = url(Ar, currenthash, hash_sprite)
@@ -789,7 +797,7 @@ function init(self)
 
 	if self.play_animation then
 		local a = self.Ago
-		for i=1,#a do
+		for i = 1, LEN[a] do
 			currenthash = spawn_from(ArcAnim)
 			parent(currenthash, self_url)
 			send(currenthash, hash_disable)
@@ -871,8 +879,8 @@ function on_message(self, message_id, message, _sender)
 				--------  Judge Start  --------
 				for t=-1,1 do
 					target = hindex[current_index_group+t]
-					if (target) and #target~=0 then
-						for i=1,#target do
+					if (target) and LEN[target] ~= 0 then
+						for i = 1, LEN[target] do
 							chid = target[i]
 							chint = hint[chid]
 							chz = chint.z
@@ -930,8 +938,8 @@ function on_message(self, message_id, message, _sender)
 				for t=-1,1 do
 					target = hindex[current_index_group+t]
 					local dt, chz, chw
-					if (target) and #target~=0 then
-						for i=1,#target do
+					if (target) and LEN[target] ~= 0 then
+						for i = 1, LEN[target] do
 							
 							chid = target[i]
 							chint = hint[chid]
@@ -1041,7 +1049,7 @@ function update(self, tslf)
 						local dgroup = floor(dtime/self.index_scale) + 1
 						if dgroup < 1 then dgroup = 1 end
 
-						if (self.Windex[dgroup]) and #self.Windex[dgroup] ~= 0 then
+						if (self.Windex[dgroup]) and LEN[self.Windex[dgroup]] ~= 0 then
 							--
 							-- I.Interpolate the Positions, Append them after the Repetition Detection.
 							--
@@ -1057,7 +1065,7 @@ function update(self, tslf)
 							local interpolate_ratio = 0
 
 							local current_indexes = self.Windex[dgroup]
-							for i=1, #current_indexes do
+							for i = 1, LEN[current_indexes] do
 								group_id = current_indexes[i]
 								--
 								-- Group Scale
@@ -1134,16 +1142,16 @@ function update(self, tslf)
 										vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 										tints[1] = current_interpolated.w
 		
-										_lvl = floor(_x*109)+floor(_y*113)
+										_lvl = floor(_x*101)+floor(_y*103)
+										TableAppend(_lvls, _lvl)
 										_lastvec[_lvl] = 1
-										_lvls[1] = _lvl
 
 										ip_index = 2
 									-- 
 									-- C.Appending after Other Wishes.
 									--
 									else
-										_lvl = floor(_x*109)+floor(_y*113)
+										_lvl = floor(_x*101)+floor(_y*103)
 										local _lv = _lastvec[_lvl]
 
 										if _lv then tints[_lv] = 0
@@ -1153,7 +1161,7 @@ function update(self, tslf)
 											tints[ip_index] = current_interpolated.w
 
 											_lastvec[_lvl] = ip_index
-											_lvls[#_lvls+1] = _lvl
+											TableAppend(_lvls, _lvl)
 											ip_index = ip_index + 1
 
 										end
@@ -1164,7 +1172,7 @@ function update(self, tslf)
 					end
 				end
 			else
-				if (self.Windex[current_index_group]) and #self.Windex[current_index_group] ~= 0 then
+				if (self.Windex[current_index_group]) and LEN[self.Windex[current_index_group]] ~= 0 then
 					--
 					-- I.Interpolate the Positions, Append them after the Repetition Detection.
 					--
@@ -1181,14 +1189,14 @@ function update(self, tslf)
 					local interpolate_ratio = 0
 
 					local current_indexes = self.Windex[current_index_group]
-					for i=1, #current_indexes do
+					for i = 1, LEN[current_indexes] do
 						group_id = current_indexes[i]
 						--
 						-- Group Scale
 						-- A.Interpolate
 						--
 						current_wish = self.Wish[group_id]
-						local current_wish_len = #current_wish
+						local current_wish_len = LEN[current_wish]
 						local wish_interpolated = false
 						if current_wish_len > 3 then
 							--
@@ -1259,16 +1267,16 @@ function update(self, tslf)
 								vecs[1].x, vecs[1].y, vecs[1].z = _x, _y, _z
 								tints[1] = current_interpolated.w
 
-								_lvl = floor(_x*109)+floor(_y*113)
+								_lvl = floor(_x*101)+floor(_y*103)
+								TableAppend(_lvls, _lvl)
 								_lastvec[_lvl] = 1
-								_lvls[1] = _lvl
 
 								ip_index = 2
 							-- 
 							-- C.Appending after Other Wishes.
 							--
 							else
-								_lvl = floor(_x*109)+floor(_y*113)
+								_lvl = floor(_x*101)+floor(_y*103)
 								local _lv = _lastvec[_lvl]
 
 								if _lv then tints[_lv] = 0
@@ -1278,7 +1286,7 @@ function update(self, tslf)
 									tints[ip_index] = current_interpolated.w
 
 									_lastvec[_lvl] = ip_index
-									_lvls[#_lvls+1] = _lvl
+									TableAppend(_lvls, _lvl)
 									ip_index = ip_index + 1
 
 								end
@@ -1292,10 +1300,11 @@ function update(self, tslf)
 			--
 			for ly = 1,16 do
 				local _lv, _lvls = last_vec[ly], lvls[ly]
-				for it = 1, #_lvls do
+				for it = 1, LEN[_lvls] do
 					_lv[ _lvls[it] ] = nil
 					_lvls[it] = nil
 				end
+				TableUpdateSize(_lvls)
 			end
 			--
 			-- II.Do Tranformations with Camera Parameters.
@@ -1392,8 +1401,8 @@ function update(self, tslf)
 			--
 			for g=-1,1 do
 				target = hindex[current_index_group+g]
-				if (target) and #target~=0 then
-					for i=1,#target do
+				if (target) and LEN[target] ~= 0 then
+					for i = 1, LEN[target] do
 						chid = target[i]
 						chint = hint[chid]
 						dt = (progress - chint.z)/spd
@@ -1508,7 +1517,7 @@ function update(self, tslf)
 				if self.ArIf then
 					
 					local _if = self.ArIf
-					local _ifsize = #_if
+					local _ifsize = LEN[_if]
 					local _ifsm1 = _ifsize-1
 
 					local prg = _if[1]
@@ -1565,7 +1574,7 @@ function update(self, tslf)
 					frame_limit_gc = frame_limit_gc + 1
 				else
 					frame_limit_gc = 0
-					gc(str_step)
+					gc(str_step, 0)
 				end
 
 			end
@@ -1585,7 +1594,7 @@ function final(self)
 		local hint = self.Hint
 		
 		local hw = 0
-		for i=1,#hint do
+		for i = 1, LEN[hint] do
 			hw = hint[i].w
 			if hw == 0 or hw==-1 then final_lost_counter = final_lost_counter+1 end
 		end
@@ -1609,13 +1618,13 @@ function final(self)
 	local target = false
 	if self.Wgo then
 		target = self.Wgo
-		for i=1,#target do target[i] = target[i].path end
+		for i = 1, LEN[target] do target[i] = target[i].path end
 		del(target)
 		self.Wgo = nil
 	end
 	if self.Hgo then
 		target = self.Hgo
-		for i=1,#target do target[i] = target[i].path end
+		for i = 1, LEN[target] do target[i] = target[i].path end
 		del(target)
 		self.Hgo = nil
 	end
@@ -1633,7 +1642,12 @@ function final(self)
 		self.exit = nil
 	end
 	
+	-- Length Cache Sweeping.
 	-- For Demo Usage Only.
-	gc()
-	gc("restart")
+	if self.fumen_id < 2 then
+		LEN.discard()
+		gc(str_collect)
+		gc(str_setpause, 100)
+	end
+
 end
