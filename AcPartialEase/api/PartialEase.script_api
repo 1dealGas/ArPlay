@@ -198,14 +198,3 @@
     returns:
     - name: vecsi
       type: vector3
-  - name: newtable
-    type: function
-    desc: Creates a Lua Table with specified asize and hsize to avoid rehashings.
-    parameters:
-    - name: asize
-      type: number
-    - name: hsize
-      type: number
-    returns:
-    - name: result
-      type: table

@@ -871,18 +871,9 @@ static inline int GetLVL(lua_State* L)
 {
 	v4p cur = dmScript::ToVector4(L, 1);
 	DM_LUA_STACK_CHECK(L, 2);
-	lua_pushnumber(L, (int)(cur->getX()*109) + (int)(cur->getY()*113) );
+	lua_pushnumber(L, (int)(cur->getX()*101) + (int)(cur->getY()*103) );
 	lua_pushnumber(L, (int)cur->getZ() );
 	return 2;
-}
-
-static inline int ntb(lua_State* L)
-{
-	int asize = luaL_checknumber(L, 1);
-	int hsize = luaL_checknumber(L, 2);
-	DM_LUA_STACK_CHECK(L, 1);
-	lua_createtable(L, asize, hsize);
-	return 1;
 }
 
 // Functions exposed to Lua
@@ -903,7 +894,6 @@ static const luaL_reg Module_methods[] =
 	{"Ctint", Ctint},
 	{"HAPos", HAPos},
 	{"GetLVL", GetLVL},
-	{"newtable", ntb},
 	{0, 0}
 };
 

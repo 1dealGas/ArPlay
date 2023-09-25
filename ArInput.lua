@@ -1,4 +1,7 @@
--- Aerials/Pragma/ArInput.script
+--  Table Utils
+--  You may replace this with require("AcTableUtil.purelua_ver") to make this script Lua-Only.
+local tu = require("AcTableUtil.main")
+local LEN = tu.LEN
 
 local hash = hash
 local post = msg.post
@@ -52,7 +55,7 @@ local function multitouch(self, action_id, action)
 			current[i].z=0
 		end
 
-		for ti=1,#touch do
+		for ti=1,LEN[touch] do
 			
 			touchti = touch[ti]
 			cid = touchti.id + 4
