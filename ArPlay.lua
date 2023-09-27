@@ -272,8 +272,8 @@ local GetLVL = P.GetLVL
 --  Table Utils
 local tu = require("AcTableUtil.main")
 local NewTable = tu.newtable
-local TableUpdateSize = tu.tableupdatesize
 local TableAppend = tu.tableappend
+local LCDiscard = tu.lcdiscard
 local LEN = tu.LEN
 
 --
@@ -298,50 +298,39 @@ end
 --
 -- Input: Block "Covered" Hints
 --
-local blocked = {}
+local blocked = NewTable(32,0)
 local blnum = 0
 local bdx = 0
 local bdy = 0
-local fsafe=true
 local function safe(x,y)
-	if x then
-		if blnum==0 then
-			blnum = 1
-			blocked[1] = x
-			blocked[2] = y
+	if blnum==0 then
+		blnum = 1
+		blocked[1] = x
+		blocked[2] = y
+		return true
+	elseif blnum==1 then
+		bdx = x - blocked[1]
+		bdy = y - blocked[2]
+		if bdx<=HINTSIZE2 and bdy<=HINTSIZE2 and bdx>=-HINTSIZE2 and bdy>=-HINTSIZE2 then
+			return false
+		else
+			blnum = 2
+			blocked[3] = x
+			blocked[4] = y
 			return true
-		elseif blnum==1 then
-			bdx = x - blocked[1]
-			bdy = y - blocked[2]
+		end
+	else
+		for i=blnum,1,-1 do
+			bdx = x - blocked[i*2-1]
+			bdy = y - blocked[i*2]
 			if bdx<=HINTSIZE2 and bdy<=HINTSIZE2 and bdx>=-HINTSIZE2 and bdy>=-HINTSIZE2 then
 				return false
-			else
-				blnum = 2
-				blocked[3] = x
-				blocked[4] = y
-				return true
 			end
-		else
-			fsafe = true
-			for i=blnum,1,-1 do
-				bdx = x - blocked[i*2-1]
-				bdy = y - blocked[i*2]
-				if bdx<=HINTSIZE2 and bdy<=HINTSIZE2 and bdx>=-HINTSIZE2 and bdy>=-HINTSIZE2 then
-					fsafe = false
-					break
-				end
-			end
-			if fsafe then
-				blnum = blnum + 1
-				blocked[blnum*2-1] = x
-				blocked[blnum*2] = y
-			end
-			return fsafe
 		end
-	elseif LEN[blocked] ~= 0 then
-		blnum = 0
-		for i=LEN[blocked], 1, -1 do blocked[i] = nil end
-		TableUpdateSize(blocked)
+		blnum = blnum + 1
+		blocked[blnum*2-1] = x
+		blocked[blnum*2] = y
+		return true
 	end
 end
 --
@@ -709,7 +698,7 @@ function init(self)
 	end
 
 	-- Update: Loads UI Nodes.
-	if self.options then
+	if self.options and Ar__current_song_id == 1001 then
 		self.options = spawn_from(Options)
 	elseif self.fumen_id < 2 then
 		self.exit = spawn_from(Exit)
@@ -761,7 +750,7 @@ function on_message(self, message_id, message, _sender)
 			local chint = false
 			
 			local selfx = 0
-			if self.options then
+			if self.options and Ar__current_song_id == 1001 then
 				selfx = self_pos().x
 			end
 
@@ -777,7 +766,10 @@ function on_message(self, message_id, message, _sender)
 			if touch[2] then
 				--
 				local mint, dt, chz, chw = 0
-				safe()
+				if blnum ~= 0 then
+					blnum = 0
+					for i=blnum*2, 1, -1 do blocked[i] = nil end
+				end
 				--
 				--------  Judge Start  --------
 				for t=-1,1 do
@@ -887,7 +879,7 @@ function on_message(self, message_id, message, _sender)
 		end
 		self.sound_speed = spd
 		self.arloc = false
-	elseif self.options then
+	elseif self.options and Ar__current_song_id == 1001 then
 		if message_id == hash_ar_show_options then
 			goanimc(self.url, hash_px)
 			animg(self.url, hash_px, PLAYBACK, -337.5, EASE_EXPAND, OPTANIM_LENGTH)
@@ -1101,7 +1093,8 @@ function update(self, tslf)
 					_lv[ _lvls[it] ] = nil
 					_lvls[it] = nil
 				end
-				TableUpdateSize(_lvls)
+				-- TableUpdateSize(_lvls)
+				LEN[_lvls] = 0
 			end
 			--
 			-- II.Do Tranformations with Camera Parameters.
@@ -1374,7 +1367,7 @@ function final(self)
 	end
 
 	-- UINode Sweeping.
-	if self.options then
+	if self.options and Ar__current_song_id == 1001 then
 		send(self.options, hash_ar_ui_final)
 		self.options = nil
 	elseif self.exit then
@@ -1385,7 +1378,7 @@ function final(self)
 	-- Length Cache Sweeping.
 	-- For Demo Usage Only.
 	if self.fumen_id < 2 then
-		LEN.discard()
+		LCDiscard()
 		gc(str_collect)
 		gc(str_setpause, 100)
 	end
