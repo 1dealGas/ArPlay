@@ -28,7 +28,7 @@ local cx = 0
 local cy = 0
 local cv = 0
 local cid = 0
-local lastnz = 4
+local msglen = 4
 
 local aru = false
 local arp = false
@@ -45,18 +45,11 @@ local function multitouch(self, action_id, action)
 		has_touch_pressed = false
 		cx,cy,cv = Ar__center_x,Ar__center_y,Ar__posdiv
 
-		
-		-- Status Check.
-		--
-		for i=4,lastnz do
-			current[i].z=0
-		end
-
-		for ti=1,#touch do
+		msglen = #touch
+		for ti = 1, msglen do
 			
 			touchti = touch[ti]
 			cid = touchti.id + 4
-			lastnz = cid
 
 			if cid>current[3] then
 				current[3] = cid
@@ -79,7 +72,7 @@ local function multitouch(self, action_id, action)
 			
 		end
 
-		
+		for i = msglen+4, current[3] do current[i].z=0 end
 		-- Upload to ArPlays (if there is)
 		--
 		
