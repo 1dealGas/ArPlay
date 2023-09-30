@@ -583,10 +583,9 @@ static inline int _IpWish(lua_State* L)
 {
 	float progress = lua_tonumber(L, 1);
 	int poll_progress = int( lua_tonumber(L, 2) );
-	int current_wish_len = int( lua_tonumber(L, 3) );
-	v4p before = dmScript::ToVector4(L, 4);
-	v4p after = dmScript::ToVector4(L, 5);
-	v4p to = dmScript::ToVector4(L, 6);
+	v4p before = dmScript::ToVector4(L, 3);
+	v4p after = dmScript::ToVector4(L, 4);
+	v4p to = dmScript::ToVector4(L, 5);
 
 	float current_x0 = before->getX();
 	float current_y0 = before->getY();
@@ -597,25 +596,8 @@ static inline int _IpWish(lua_State* L)
 	int current_type = int( before->getW() );
 	float ratiox = (progress - current_t0) / (after->getZ() - current_t0);
 
-	if (poll_progress == 3)
-	{
-		if (ratiox <= 0.237f)
-		{
-			to->setW( 2.0f + ratiox );
-		}
-		else
-		{
-			to->setW( 0.0f );
-		}
-	}
-	else if (poll_progress == current_wish_len - 1  &&  ratiox >= 0.763f)
-	{
-		to->setW( -2.0f - ratiox );
-	}
-	else
-	{
-		to->setW( 0.0f );
-	}
+	if (poll_progress == 3 && ratiox <= 0.237f) { to->setW( 2.0f + ratiox ); }
+	else { to->setW( 0.0f ); }
 	
 	if (current_type > 1048575)
 	{
@@ -838,12 +820,6 @@ static inline int Ctint(lua_State* L)
 		tintw = 1 - tintw / 0.237;
 		expand_wish = 1 + tintw * tintw / 2;
 		tintw = 1 - tintw * tintw * tintw;
-	}
-	else if (ctint <= -2.0)
-	{
-		tintw = ctint + 3.0;
-		tintw /= 0.237;
-		tintw = tintw * tintw * tintw;
 	}
 	
 	DM_LUA_STACK_CHECK(L, 2);

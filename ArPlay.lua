@@ -798,24 +798,28 @@ function on_message(self, message_id, message, _sender)
 							end
 
 							if chw == -1 and dt<SWEEP then
-								
 								local issafe = safe(chint.x, chint.y)  -- Must Register the Current Pivot.
+								
 								if mint == 0 or mint == chz then
-									
-									if mint==0 then mint=chz end
-									has_hint_judged = true
-									chint.w = -itime
 									
 									if dt<HITZONE and dt>-HITZONE then Ar__current_score = Ar__current_score + 1
 									else Ar__current_lost = Ar__current_lost + 1
-									end									
-									
-								elseif dt<HITZONE and dt>-HITZONE and issafe then
-									Ar__current_score = Ar__current_score + 1
-									has_hint_judged = true
+									end
+
 									chint.w = -itime
+									has_hint_judged = true
+									if mint==0 then mint=chz end
+									
+								elseif issafe then
+									
+									if dt<HITZONE and dt>-HITZONE then Ar__current_score = Ar__current_score + 1
+									else Ar__current_lost = Ar__current_lost + 1
+									end
+
+									chint.w = -itime
+									has_hint_judged = true
+									
 								end
-								
 							end
 						end
 					end
@@ -979,7 +983,7 @@ function update(self, tslf)
 
 									while poll_progress ~= current_wish_len and not wish_interpolated do
 										if current_wish[poll_progress].z <= dtime and current_wish[poll_progress+1].z > dtime then
-											wish_interpolated = IpWish(dtime, poll_progress, current_wish_len, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
+											wish_interpolated = IpWish(dtime, poll_progress, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
 											current_wish[1] = poll_progress
 										else
 											poll_progress = poll_progress + 1
@@ -1048,7 +1052,7 @@ function update(self, tslf)
 							
 							while poll_progress ~= current_wish_len and not wish_interpolated do
 								if current_wish[poll_progress].z <= progress and current_wish[poll_progress+1].z > progress then
-									wish_interpolated = IpWish(progress, poll_progress, current_wish_len, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
+									wish_interpolated = IpWish(progress, poll_progress, current_wish[poll_progress], current_wish[poll_progress+1], current_interpolated)
 									current_wish[1] = poll_progress
 								else
 									poll_progress = poll_progress + 1

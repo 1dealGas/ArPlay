@@ -90,8 +90,6 @@
       type: number
     - name: poll_progress
       type: number
-    - name: current_wish_len
-      type: number
     - name: before
       type: vector4
     - name: after
