@@ -847,7 +847,7 @@ static inline int GetLVL(lua_State* L)
 {
 	v4p cur = dmScript::ToVector4(L, 1);
 	DM_LUA_STACK_CHECK(L, 2);
-	lua_pushnumber(L, (int)(cur->getX()*101) + (int)(cur->getY()*103) );
+	lua_pushnumber(L, (int)(cur->getX()*1009) + (int)(cur->getY()*1013) );
 	lua_pushnumber(L, (int)cur->getZ() );
 	return 2;
 }
