@@ -282,7 +282,7 @@ local LEN = tu.LEN
 local HINTSIZE = HINTSIZE2/2
 local tdx,tdy,ofi = false,false,false
 local function has_touch_near(x,y,of,selfx)
-	for i=4,of[3] do
+	for i=5,of[4] do
 		ofi = of[i]
 		if ofi.z>0 then
 			tdy = ofi.y - y
@@ -753,24 +753,23 @@ function on_message(self, message_id, message, _sender)
 			if self.options and Ar__current_song_id == 1001 then
 				selfx = self_pos().x
 			end
-
-			-- Clear the Cache of "has_touch_near" Function, for Optimization Usage.
+			
+			-- Reset the Safety Condition if There is Any Finger Released.
 			--
-			-- has_touch_near()
-			has_hint_judged = false
+			if touch[3] then
+				if blnum ~= 0 then
+					for i=blnum*2, 1, -1 do blocked[i] = nil end
+					blnum = 0
+				end
+			end
 			--
-			----
-
+			
 			-- Light&Delit Hints, then Judge.
 			--
+			local mint, dt, chz, chw = 0
 			if touch[2] then
-				--
-				local mint, dt, chz, chw = 0
-				if blnum ~= 0 then
-					blnum = 0
-					for i=blnum*2, 1, -1 do blocked[i] = nil end
-				end
-				--
+				has_hint_judged = false
+				
 				--------  Judge Start  --------
 				for t=-1,1 do
 					target = hindex[current_index_group+t]
@@ -799,7 +798,6 @@ function on_message(self, message_id, message, _sender)
 
 							if chw == -1 and dt<SWEEP then
 								local issafe = safe(chint.x, chint.y)  -- Must Register the Current Pivot.
-								
 								if mint == 0 or mint == chz then
 									
 									if dt<HITZONE and dt>-HITZONE then Ar__current_score = Ar__current_score + 1
@@ -825,6 +823,7 @@ function on_message(self, message_id, message, _sender)
 					end
 				end
 				--------  Judge Complete  --------
+				
 				if has_hint_judged and haptics_supported and Ar__haptics then
 					if origtime-last_vibration_time <= 37 then
 					else last_vibration_time = origtime
@@ -833,10 +832,10 @@ function on_message(self, message_id, message, _sender)
 						end
 					end
 				end
+				
 			else
 				for t=-1,1 do
 					target = hindex[current_index_group+t]
-					local dt, chz, chw
 					if (target) and LEN[target] ~= 0 then
 						for i=1, LEN[target] do
 							
@@ -1199,6 +1198,16 @@ function update(self, tslf)
 								else
 									set(thisgo, hash_tint, EAR)
 								end
+
+								-- Show the Animation As Soon As the Hint is Judged.
+								if ago then
+									pt = (progress+chintw) / spd
+									thisgo = ago[ago_index]
+									set_position( HAPos(vecs[i], chint, -0.7-pt*0.00001), thisgo)
+									send(thisgo, hash_ar_update, { pt, -(chint.w+chint.z)/spd } )
+									ago_index = ago_index + 1
+								end
+								
 							elseif chintw==1 then
 								thisgo = hgo[hgo_index]
 								set_position( HAPos(vecs[i], chint, -0.72+dt*0.00001), thisgo)

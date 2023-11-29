@@ -23,6 +23,7 @@ local uitouchxyz = {0,0}
 local not_pressed = false
 local not_released = false
 local has_touch_pressed = false
+local has_touch_released = false
 
 local cx = 0
 local cy = 0
@@ -49,10 +50,10 @@ local function multitouch(self, action_id, action)
 		for ti = 1, msglen do
 			
 			touchti = touch[ti]
-			cid = touchti.id + 4
+			cid = touchti.id + 5
 
-			if cid>current[3] then
-				current[3] = cid
+			if cid>current[4] then
+				current[4] = cid
 				current[cid] = v3()
 			end
 
@@ -68,17 +69,19 @@ local function multitouch(self, action_id, action)
 				has_touch_pressed = true
 			else
 				current[cid].z = -1
+				has_touch_released = true
 			end
 			
 		end
 
-		for i = msglen+4, current[3] do current[i].z=0 end
+		for i = msglen+5, current[4] do current[i].z=0 end
 		-- Upload to ArPlays (if there is)
 		--
 		
 		if arp[1] > 0 then	
 			current[1] = time()*1000
 			current[2] = has_touch_pressed
+			current[3] = has_touch_released
 			for i=3, arp[2] do
 				if arp[i] then
 					post(arp[i], hash_ar_judge, current)
@@ -92,7 +95,7 @@ local function multitouch(self, action_id, action)
 		-- Upload to UINodes (if there is)
 		-- UI Touches will be comsumed by the last UI Node.
 		--
-		local uitouch = current[4]		
+		local uitouch = current[5]		
 		if uitouch.z~=0 and aru[1]>0 then
 			
 			local last = true
@@ -127,6 +130,7 @@ local function cursor(self, action_id, action)
 
 		
 		current[2] = false
+		current[3] = false
 		cx,cy,cv = Ar__center_x,Ar__center_y,Ar__posdiv
 
 		
@@ -143,6 +147,7 @@ local function cursor(self, action_id, action)
 			current[2] = true
 		else
 			curz = -1
+			current[3] = true
 		end
 
 		
@@ -150,9 +155,9 @@ local function cursor(self, action_id, action)
 		--
 		if arp[1] > 0 then
 			current[1] = time()*1000
-			current[4].x = curx
-			current[4].y = cury
-			current[4].z = curz
+			current[5].x = curx
+			current[5].y = cury
+			current[5].z = curz
 			for i=3, arp[2] do
 				if arp[i] then
 					post(arp[i], hash_ar_judge, current)
@@ -194,14 +199,14 @@ end
 
 if Ar__mobile then
 	current = {
-		-- Input Time, Any Pressed, Table Length
-		0, false, 8,
+		-- Input Time, Any Pressed, Any Released, Table Length
+		0, false, false, 9,
 		-- Touches.
 		v3(),v3(),v3(),v3(),v3()
 	}
 	on_input = multitouch
 else
-	current = {0, false, 4,v3()}
+	current = {0, false, false, 5, v3()}
 	on_input = cursor
 end
 
